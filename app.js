@@ -72,6 +72,21 @@ const lessons = [
   }
 ];
 
+const windsurfVideos = [
+  ['75Fhnr1Pgv8', 'Vælg det rigtige board'],
+  ['bS3VtjB9MLo', 'Beachstart og vandstart'],
+  ['dVhIQM3yUkk', 'Ikke-planende carve gybe'],
+  ['PbyBlfzJ3XU', 'Windsurfing for begyndere'],
+  ['VfbATiUNizI', 'Sådan laver du en gybe'],
+  ['NsB4eoIiSSA', 'Sådan laver du en stagvending'],
+  ['KU98d8JZ_ZE', 'Placering af trapezliner'],
+  ['fUP9YQnUMrA', 'Sådan rigger du sejlet'],
+  ['ON9Qp5S9qfI', 'Carve gybe: fodskifte og afslutning'],
+  ['CSu4ZAV3GVI', 'Bomhøjde, liner og trim'],
+  ['WB30KgpTnZ4', 'Planing og fodstropper'],
+  ['jHhiaW9Iwc4', 'Ikke-planende gybe']
+];
+
 const app = document.querySelector('#app');
 const completed = new Set(JSON.parse(localStorage.getItem('ssw-completed') || '[]'));
 let currentView = 'home';
@@ -106,7 +121,7 @@ function homeView() {
 
 function courseView() {
   return `<section class="page-hero course-hero"><span class="kicker light">Fra landkrabbe til windsurfer</span><h1>Begynder&shy;guiden</h1><p>Følg lektionerne i rækkefølge. Tag telefonen med på stranden og brug hvert trin som støtte.</p><div class="course-progress"><div><span style="width:${progress()}%"></span></div><strong>${completed.size}/${lessons.length}</strong></div></section>
-  <section class="section video-section"><div class="video-heading"><div><span class="kicker">Se og lær</span><h2>Windsurfing på video</h2></div><p>Se hele videoserien i dit eget tempo. Brug playlistens menu i afspilleren til at vælge den næste video.</p></div><div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=PLKPL5ocqBu1gVXunqPIYDhJcoKp4cy5kV" title="YouTube-playliste med windsurfingundervisning" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><a class="youtube-link" href="https://youtube.com/playlist?list=PLKPL5ocqBu1gVXunqPIYDhJcoKp4cy5kV" target="_blank" rel="noreferrer">Åbn playlisten på YouTube →</a></section>
+  <section class="section video-section"><div class="video-heading"><div><span class="kicker">Se og lær</span><h2>Windsurfing på video</h2></div><p>Vælg en video nedenfor. Den åbner direkte i afspilleren, så du nemt kan finde den teknik, du vil øve.</p></div><div class="video-frame"><iframe id="windsurfVideoPlayer" src="https://www.youtube-nocookie.com/embed/${windsurfVideos[0][0]}?rel=0" title="${windsurfVideos[0][1]}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><div class="video-picker" aria-label="Vælg undervisningsvideo">${windsurfVideos.map((video, index) => `<button class="video-card ${index === 0 ? 'active' : ''}" data-video="${video[0]}" data-video-title="${video[1]}"><span class="video-thumb"><img src="https://i.ytimg.com/vi/${video[0]}/mqdefault.jpg" alt="" loading="lazy"><span class="video-play" aria-hidden="true">▶</span></span><span class="video-card-copy"><small>Video ${index + 1}</small><strong>${video[1]}</strong></span></button>`).join('')}</div><a class="youtube-link" href="https://youtube.com/playlist?list=PLKPL5ocqBu1gVXunqPIYDhJcoKp4cy5kV" target="_blank" rel="noreferrer">Åbn playlisten på YouTube →</a></section>
   <section class="section lesson-list"><div class="lesson-section-head"><span class="kicker">Trin for trin</span><h2>De seks lektioner</h2></div>${lessons.map(l => `<button class="lesson-card ${completed.has(l.id) ? 'done' : ''}" data-lesson="${l.id}"><span class="lesson-number">${completed.has(l.id) ? '✓' : l.number}</span><span class="lesson-copy"><small>${l.level} · ${l.time}</small><strong>${l.title}</strong><em>${l.intro}</em></span><span class="lesson-arrow">→</span></button>`).join('')}</section>`;
 }
 
@@ -155,6 +170,7 @@ document.addEventListener('click', event => {
   const viewTarget = event.target.closest('[data-view]');
   const lessonTarget = event.target.closest('[data-lesson]');
   const completeTarget = event.target.closest('[data-complete]');
+  const videoTarget = event.target.closest('[data-video]');
   if (viewTarget) { closeSheet(); render(viewTarget.dataset.view); }
   if (lessonTarget) render(`lesson:${lessonTarget.dataset.lesson}`);
   if (completeTarget) {
@@ -162,6 +178,13 @@ document.addEventListener('click', event => {
     completed.has(id) ? completed.delete(id) : completed.add(id);
     localStorage.setItem('ssw-completed', JSON.stringify([...completed]));
     render(`lesson:${id}`);
+  }
+  if (videoTarget) {
+    const player = document.querySelector('#windsurfVideoPlayer');
+    player.src = `https://www.youtube-nocookie.com/embed/${videoTarget.dataset.video}?rel=0&autoplay=1`;
+    player.title = videoTarget.dataset.videoTitle;
+    document.querySelectorAll('.video-card').forEach(card => card.classList.toggle('active', card === videoTarget));
+    document.querySelector('.video-frame').scrollIntoView({behavior:'smooth', block:'center'});
   }
 });
 
