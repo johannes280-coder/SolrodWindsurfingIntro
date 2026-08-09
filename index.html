@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#073b4c">
+  <meta name="description" content="Din begynderguide til Solrød Strand Windsurfing.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/club-logo.png" type="image/png">
+  <title>Ny på vandet · Solrød Strand Windsurfing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="authRoot" class="auth-root"><div class="auth-loading"><img src="assets/club-logo.png" alt=""><p>Kontrollerer adgang…</p></div></div>
+  <div class="app-shell" id="appShell" hidden>
+    <header class="topbar">
+      <button class="brand" data-view="home" aria-label="Gå til forsiden">
+        <img src="assets/club-logo.png" alt="Solrød Strand Windsurfing logo">
+        <span><strong>Solrød Strand</strong><small>Windsurfing</small></span>
+      </button>
+      <button class="round-button" id="menuButton" aria-label="Åbn menu"><span></span><span></span></button>
+    </header>
+
+    <main id="app"></main>
+
+    <nav class="bottom-nav" aria-label="Hovedmenu">
+      <button data-view="home" class="active"><span class="nav-icon">⌂</span><span>Hjem</span></button>
+      <button data-view="course"><span class="nav-icon">≋</span><span>Lær</span></button>
+      <button data-view="safety"><span class="nav-icon">◇</span><span>Sikkerhed</span></button>
+      <button data-view="club"><span class="nav-icon">◎</span><span>Klubben</span></button>
+    </nav>
+  </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden>
+    <aside class="sheet" role="dialog" aria-modal="true" aria-label="Menu">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head"><h2>Menu</h2><button id="closeMenu" class="round-button" aria-label="Luk menu">×</button></div>
+      <button class="sheet-link" data-view="home">Velkommen <span>→</span></button>
+      <button class="sheet-link" data-view="course">Begynderkursus <span>→</span></button>
+      <button class="sheet-link" data-view="safety">Sikkerhed på vandet <span>→</span></button>
+      <button class="sheet-link" data-view="club">Om klubben <span>→</span></button>
+      <button class="sheet-link" id="adminButton" hidden>Administrér brugere <span>→</span></button>
+      <button class="install-button" id="installButton">Føj appen til hjemmeskærmen</button>
+      <button class="logout-link" id="logoutButton">Log ud</button>
+    </aside>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

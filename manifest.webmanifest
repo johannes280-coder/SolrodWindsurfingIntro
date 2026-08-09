@@ -1,0 +1,11 @@
+{
+  "name": "Ny på vandet · Solrød Strand Windsurfing",
+  "short_name": "Ny på vandet",
+  "description": "Begynderguide og klubintroduktion til Solrød Strand Windsurfing.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f1e8",
+  "theme_color": "#073b4c",
+  "icons": [{"src":"assets/club-logo.png","sizes":"1536x1536","type":"image/png","purpose":"any"}]
+}
