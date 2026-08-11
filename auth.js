@@ -4,7 +4,25 @@ const adminButton = document.querySelector('#adminButton');
 const logoutButton = document.querySelector('#logoutButton');
 const authConfig = window.APP_CONFIG || {};
 const authConfigured = Boolean(authConfig.supabaseUrl && authConfig.supabaseAnonKey && window.supabase);
-const authClient = authConfigured ? window.supabase.createClient(authConfig.supabaseUrl, authConfig.supabaseAnonKey) : null;
+const rememberPreferenceKey = 'ssw-remember-login';
+const sessionStorageAdapter = {
+  getItem(key) {
+    return localStorage.getItem(key) || sessionStorage.getItem(key);
+  },
+  setItem(key, value) {
+    const preference = localStorage.getItem(rememberPreferenceKey);
+    const remember = preference === 'true' || (preference === null && localStorage.getItem(key) !== null);
+    const preferredStorage = remember ? localStorage : sessionStorage;
+    const otherStorage = remember ? sessionStorage : localStorage;
+    preferredStorage.setItem(key, value);
+    otherStorage.removeItem(key);
+  },
+  removeItem(key) {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  }
+};
+const authClient = authConfigured ? window.supabase.createClient(authConfig.supabaseUrl, authConfig.supabaseAnonKey, { auth: { storage: sessionStorageAdapter, persistSession: true } }) : null;
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
@@ -21,7 +39,7 @@ function showLogin(mode = 'login') {
   appShell.hidden = true;
   authRoot.hidden = false;
   const registering = mode === 'register';
-  authRoot.innerHTML = `<section class="auth-card"><img class="auth-logo" src="assets/club-logo.png" alt="Solrød Strand Windsurfing logo"><span class="kicker">Medlemsadgang</span><h1>${registering ? 'Opret bruger' : 'Velkommen tilbage'}</h1><p>${registering ? 'Opret din konto. En administrator skal godkende den, før du får adgang.' : 'Log ind for at åbne klubguiden.'}</p><form id="authForm">${registering ? '<label>Navn<input name="name" autocomplete="name" required></label>' : ''}<label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Adgangskode<input name="password" type="password" autocomplete="current-password" minlength="8" required></label><div id="authMessage" class="auth-message"></div><button class="auth-submit" type="submit">${registering ? 'Opret bruger' : 'Log ind'}</button></form><button class="auth-switch" id="authSwitch">${registering ? 'Har du allerede en bruger? Log ind' : 'Ny i klubben? Opret bruger'}</button></section>`;
+  authRoot.innerHTML = `<section class="auth-card"><img class="auth-logo" src="assets/club-logo.png" alt="Solrød Strand Windsurfing logo"><span class="kicker">Medlemsadgang</span><h1>${registering ? 'Opret bruger' : 'Velkommen tilbage'}</h1><p>${registering ? 'Opret din konto. En administrator skal godkende den, før du får adgang.' : 'Log ind for at åbne klubguiden.'}</p><form id="authForm">${registering ? '<label>Navn<input name="name" autocomplete="name" required></label>' : ''}<label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Adgangskode<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>${registering ? '' : `<label class="remember-login"><input name="remember" type="checkbox" ${localStorage.getItem(rememberPreferenceKey) === 'true' ? 'checked' : ''}><span class="remember-check" aria-hidden="true"></span><span>Husk mig på denne enhed</span></label>`}<div id="authMessage" class="auth-message"></div><button class="auth-submit" type="submit">${registering ? 'Opret bruger' : 'Log ind'}</button></form><button class="auth-switch" id="authSwitch">${registering ? 'Har du allerede en bruger? Log ind' : 'Ny i klubben? Opret bruger'}</button></section>`;
   document.querySelector('#authSwitch').addEventListener('click', () => showLogin(registering ? 'login' : 'register'));
   document.querySelector('#authForm').addEventListener('submit', async event => {
     event.preventDefault();
@@ -35,6 +53,8 @@ function showLogin(mode = 'login') {
       if (!result.session) { showAuthMessage('Kontoen er oprettet. Tjek din e-mail, og bekræft adressen.', 'success'); button.textContent = 'E-mail sendt'; return; }
       await applySession(result.session);
     } else {
+      if (data.get('remember')) localStorage.setItem(rememberPreferenceKey, 'true');
+      else localStorage.setItem(rememberPreferenceKey, 'false');
       const { data: result, error } = await authClient.auth.signInWithPassword({ email: data.get('email'), password: data.get('password') });
       if (error) { showAuthMessage('E-mail eller adgangskode er forkert.'); button.disabled = false; button.textContent = 'Log ind'; return; }
       await applySession(result.session);
