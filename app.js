@@ -88,12 +88,10 @@ const windsurfVideos = [
 ];
 
 const app = document.querySelector('#app');
-const completed = new Set(JSON.parse(localStorage.getItem('ssw-completed') || '[]'));
 let currentView = 'home';
 let deferredInstallPrompt = null;
 
 const icon = name => ({wave:'≈', compass:'◇', people:'◌', sail:'◢', shield:'✦', pin:'●'}[name] || '•');
-const progress = () => Math.round((completed.size / lessons.length) * 100);
 
 function homeView() {
   return `
@@ -104,11 +102,6 @@ function homeView() {
     <section class="section welcome-grid">
       <div><span class="kicker">Godt at se dig</span><h2>Her begynder<br>dit surfeventyr</h2></div>
       <div><p>Du behøver hverken eget udstyr eller erfaring. Klubben har udstyr og uddannede instruktører, som hjælper dig sikkert fra strand til board.</p><div class="mini-stats"><span><strong>6</strong> lektioner</span><span><strong>57</strong> minutter</span><span><strong>0</strong> erfaring krævet</span></div></div>
-    </section>
-    <section class="section progress-card">
-      <div class="progress-ring" style="--progress:${progress() * 3.6}deg"><span>${progress()}%</span></div>
-      <div><span class="kicker">Din læring</span><h3>${completed.size ? 'Godt i gang!' : 'Klar til første lektion?'}</h3><p>${completed.size} af ${lessons.length} lektioner gennemført. Din status gemmes automatisk på telefonen.</p></div>
-      <button class="text-link" data-view="course">Fortsæt →</button>
     </section>
     <section class="section weather-section">
       <div class="weather-heading"><div><span class="kicker">Før du tager afsted</span><h2>Vejr og sejladsforhold</h2></div><p>Kontrollér altid vind, vindstød, nedbør og vandstand. Som begynder skal du spørge en instruktør, hvis du er i tvivl om forholdene.</p></div>
@@ -127,17 +120,16 @@ function homeView() {
 }
 
 function courseView() {
-  return `<section class="page-hero course-hero"><span class="kicker light">Fra landkrabbe til windsurfer</span><h1>Begynder&shy;guiden</h1><p>Følg lektionerne i rækkefølge. Tag telefonen med på stranden og brug hvert trin som støtte.</p><div class="course-progress"><div><span style="width:${progress()}%"></span></div><strong>${completed.size}/${lessons.length}</strong></div></section>
+  return `<section class="page-hero course-hero"><span class="kicker light">Fra landkrabbe til windsurfer</span><h1>Begynder&shy;guiden</h1><p>Følg lektionerne i rækkefølge. Tag telefonen med på stranden og brug hvert trin som støtte.</p></section>
   <section class="section video-section"><div class="video-heading"><div><span class="kicker">Se og lær</span><h2>Windsurfing på video</h2></div><p>Vælg en video nedenfor. Den åbner direkte i afspilleren, så du nemt kan finde den teknik, du vil øve.</p></div><div class="video-frame"><iframe id="windsurfVideoPlayer" src="https://www.youtube-nocookie.com/embed/${windsurfVideos[0][0]}?rel=0" title="${windsurfVideos[0][1]}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><div class="video-picker" aria-label="Vælg undervisningsvideo">${windsurfVideos.map((video, index) => `<button class="video-card ${index === 0 ? 'active' : ''}" data-video="${video[0]}" data-video-title="${video[1]}"><span class="video-thumb"><img src="https://i.ytimg.com/vi/${video[0]}/mqdefault.jpg" alt="" loading="lazy"><span class="video-play" aria-hidden="true">▶</span></span><span class="video-card-copy"><small>Video ${index + 1}</small><strong>${video[1]}</strong></span></button>`).join('')}</div><a class="youtube-link" href="https://youtube.com/playlist?list=PLKPL5ocqBu1gVXunqPIYDhJcoKp4cy5kV" target="_blank" rel="noreferrer">Åbn playlisten på YouTube →</a></section>
-  <section class="section lesson-list"><div class="lesson-section-head"><span class="kicker">Trin for trin</span><h2>De seks lektioner</h2></div>${lessons.map(l => `<button class="lesson-card ${completed.has(l.id) ? 'done' : ''}" data-lesson="${l.id}"><span class="lesson-number">${completed.has(l.id) ? '✓' : l.number}</span><span class="lesson-copy"><small>${l.level} · ${l.time}</small><strong>${l.title}</strong><em>${l.intro}</em></span><span class="lesson-arrow">→</span></button>`).join('')}</section>`;
+  <section class="section lesson-list"><div class="lesson-section-head"><span class="kicker">Trin for trin</span><h2>De seks lektioner</h2></div>${lessons.map(l => `<button class="lesson-card" data-lesson="${l.id}"><span class="lesson-number">${l.number}</span><span class="lesson-copy"><small>${l.level} · ${l.time}</small><strong>${l.title}</strong><em>${l.intro}</em></span><span class="lesson-arrow">→</span></button>`).join('')}</section>`;
 }
 
 function lessonView(id) {
   const lesson = lessons.find(item => item.id === id);
   return `<section class="lesson-hero"><button class="back" data-view="course">← Alle lektioner</button><span class="lesson-big-number">${lesson.number}</span><span class="kicker light">${lesson.level} · ${lesson.time}</span><h1>${lesson.title}</h1><p>${lesson.intro}</p></section>
     <section class="lesson-body">${lesson.id === 'gear' ? `<div class="equipment-gallery"><figure><img src="assets/beginner-equipment-land-1.jpg" alt="Et komplet begynderssejl med mast, bom og optræksline lagt på græs"><figcaption><strong>Den komplette rig</strong><span>Sejl, mast, bom og optræksline samlet.</span></figcaption></figure><figure><img src="assets/beginner-equipment-land-2.jpg" alt="Nærbillede af bommen monteret på masten og sejlet"><figcaption><strong>Bom og mast</strong><span>Bommen er monteret rundt om masten og bruges til at styre sejlet.</span></figcaption></figure><p class="photo-credit">Fotos: ILA-boy / <a href="https://commons.wikimedia.org/wiki/File:Windsurfing_equipment_2008_01.JPG" target="_blank" rel="noreferrer">Wikimedia Commons</a> · GNU GPL 2.0 eller nyere</p></div>` : ''}<div class="step-list">${lesson.steps.map((step, i) => `<article class="step"><span>${String(i + 1).padStart(2,'0')}</span><div><h2>${step[0]}</h2><p>${step[1]}</p></div></article>`).join('')}</div>
-    <aside class="coach-tip"><span>Instruktørens tip</span><p>“${lesson.tip}”</p></aside>
-    <button class="complete-button ${completed.has(id) ? 'completed' : ''}" data-complete="${id}">${completed.has(id) ? '✓ Lektionen er gennemført' : 'Markér lektionen som gennemført'}</button></section>`;
+    <aside class="coach-tip"><span>Instruktørens tip</span><p>“${lesson.tip}”</p></aside></section>`;
 }
 
 function safetyView() {
@@ -176,16 +168,9 @@ function render(view = currentView) {
 document.addEventListener('click', event => {
   const viewTarget = event.target.closest('[data-view]');
   const lessonTarget = event.target.closest('[data-lesson]');
-  const completeTarget = event.target.closest('[data-complete]');
   const videoTarget = event.target.closest('[data-video]');
   if (viewTarget) { closeSheet(); render(viewTarget.dataset.view); }
   if (lessonTarget) render(`lesson:${lessonTarget.dataset.lesson}`);
-  if (completeTarget) {
-    const id = completeTarget.dataset.complete;
-    completed.has(id) ? completed.delete(id) : completed.add(id);
-    localStorage.setItem('ssw-completed', JSON.stringify([...completed]));
-    render(`lesson:${id}`);
-  }
   if (videoTarget) {
     const player = document.querySelector('#windsurfVideoPlayer');
     player.src = `https://www.youtube-nocookie.com/embed/${videoTarget.dataset.video}?rel=0&autoplay=1`;
