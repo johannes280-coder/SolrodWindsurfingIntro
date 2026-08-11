@@ -123,6 +123,13 @@ function windDirection(degrees) {
   return names[Math.round(degrees / 45) % 8];
 }
 
+function meanWindDirection(points) {
+  const radians = points.map(point => point.direction * Math.PI / 180);
+  const x = radians.reduce((sum, angle) => sum + Math.cos(angle), 0);
+  const y = radians.reduce((sum, angle) => sum + Math.sin(angle), 0);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+
 function weatherDescription(code) {
   if (code === 0) return 'Klart vejr';
   if ([1, 2, 3].includes(code)) return 'Delvist skyet';
@@ -138,12 +145,24 @@ async function loadCurrentWeather() {
   const container = document.querySelector('#currentWeather');
   if (!container) return;
   try {
-    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=55.5358&longitude=12.4269&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Europe%2FCopenhagen');
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=55.5358&longitude=12.4269&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&hourly=wind_speed_10m,wind_direction_10m,weather_code&wind_speed_unit=ms&timezone=Europe%2FCopenhagen&forecast_days=6');
     if (!response.ok) throw new Error('Vejret kunne ikke hentes');
-    const { current } = await response.json();
+    const { current, hourly } = await response.json();
     const direction = windDirection(current.wind_direction_10m);
     const offshore = current.wind_direction_10m >= 225 && current.wind_direction_10m <= 315;
-    container.innerHTML = `<div class="current-weather-head"><div><span class="kicker">Lige nu ved stranden</span><h2>${weatherDescription(current.weather_code)}</h2></div><span class="weather-updated">Opdateret kl. ${current.time.slice(11, 16)}</span></div><div class="current-weather-values"><div><strong>${Math.round(current.temperature_2m)}°</strong><span>Temperatur</span><small>Føles som ${Math.round(current.apparent_temperature)}°</small></div><div><strong>${Number(current.wind_speed_10m).toFixed(1)}</strong><span>m/s vind</span><small>Fra ${direction}</small></div><div class="wind-compass"><span style="--wind-angle:${current.wind_direction_10m}deg">↑</span><strong>${Math.round(current.wind_direction_10m)}°</strong><small>${direction}</small></div></div>${offshore ? '<p class="current-weather-warning"><strong>Fralandsvind:</strong> Sejl aldrig uden følgebåd.</p>' : ''}<a class="weather-source" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Vejrdata: Open-Meteo →</a>`;
+    const today = current.time.slice(0, 10);
+    const dates = [...new Set(hourly.time.map(time => time.slice(0, 10)))].filter(date => date > today).slice(0, 5);
+    const forecastCards = dates.map(date => {
+      const points = hourly.time.map((time, index) => ({ time, speed: Number(hourly.wind_speed_10m[index]), direction: Number(hourly.wind_direction_10m[index]), code: hourly.weather_code[index] })).filter(point => point.time.startsWith(date) && Number(point.time.slice(11, 13)) >= 8 && Number(point.time.slice(11, 13)) < 20);
+      const min = Math.min(...points.map(point => point.speed));
+      const max = Math.max(...points.map(point => point.speed));
+      const averageDirection = meanWindDirection(points);
+      const westerlyHours = points.filter(point => point.direction >= 225 && point.direction <= 315 && point.speed >= 4 && point.speed <= 8);
+      const status = westerlyHours.length >= 2 ? 'Mulige træningsforhold*' : max < 4 ? 'For lidt vind' : min > 8 ? 'Kraftig vind' : 'Tjek prognosen nærmere';
+      const dayName = new Intl.DateTimeFormat('da-DK', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00`));
+      return `<article class="surf-day ${westerlyHours.length >= 2 ? 'possible' : ''}"><span>${dayName}</span><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><em>Fra ${windDirection(averageDirection)}</em><b>${status}</b></article>`;
+    }).join('');
+    container.innerHTML = `<div class="current-weather-head"><div><span class="kicker">Lige nu ved stranden</span><h2>${weatherDescription(current.weather_code)}</h2></div><span class="weather-updated">Opdateret kl. ${current.time.slice(11, 16)}</span></div><div class="current-weather-values"><div><strong>${Math.round(current.temperature_2m)}°</strong><span>Temperatur</span><small>Føles som ${Math.round(current.apparent_temperature)}°</small></div><div><strong>${Number(current.wind_speed_10m).toFixed(1)}</strong><span>m/s vind</span><small>Fra ${direction}</small></div><div class="wind-compass"><span style="--wind-angle:${current.wind_direction_10m}deg">↑</span><strong>${Math.round(current.wind_direction_10m)}°</strong><small>${direction}</small></div></div>${offshore ? '<p class="current-weather-warning"><strong>Fralandsvind:</strong> Sejl aldrig uden følgebåd.</p>' : ''}<div class="surf-forecast"><div><span class="kicker light">De kommende dage</span><h3>Surfvejret i Solrød Strand</h3></div><div class="surf-days">${forecastCards}</div><p>*Vestlig vind på 4–8 m/s i mindst to timer. Vestlig vind er fralandsvind ved Solrød – sejl aldrig uden instruktør eller følgebåd.</p></div><a class="weather-source" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Vejrdata: Open-Meteo →</a>`;
   } catch (_error) {
     container.innerHTML = '<p class="current-weather-error">Det aktuelle vejr kunne ikke hentes. Brug vejrtjenesterne nedenfor.</p>';
   }
