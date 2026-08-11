@@ -106,7 +106,11 @@ async function refreshMembers() {
   if (error) { list.innerHTML = '<p>Brugerne kunne ikke hentes.</p>'; return; }
   list.innerHTML = data.map(user => {
     const ownAccount = user.id === window.currentAccessProfile.id;
-    const accessButtons = user.is_admin ? '' : `<button data-access="${user.id}" data-status="approved">Godkend</button><button data-access="${user.id}" data-status="blocked">Blokér</button>`;
+    const accessButtons = user.is_admin
+      ? ''
+      : user.access_status === 'approved'
+        ? `<button data-access="${user.id}" data-status="blocked">Blokér</button>`
+        : `<button data-access="${user.id}" data-status="approved">Godkend</button>`;
     const roleButton = ownAccount ? '' : `<button class="admin-role-button" data-admin-role="${user.id}" data-is-admin="${user.is_admin}">${user.is_admin ? 'Fjern admin' : 'Gør til admin'}</button>`;
     const deleteButton = user.is_admin ? '' : `<button class="delete-member" data-delete="${user.id}">Slet</button>`;
     return `<article class="member-row"><div><strong>${escapeHtml(user.full_name || 'Uden navn')}</strong><span>${escapeHtml(user.email || '')}</span><small class="last-login">${formatLastLogin(user.last_sign_in_at)}</small><small class="status ${user.access_status}">${user.is_admin ? 'Administrator' : user.access_status === 'approved' ? 'Godkendt' : user.access_status === 'blocked' ? 'Blokeret' : 'Afventer'}</small></div><div class="member-actions">${ownAccount ? '<em>Din konto</em>' : `${accessButtons}${roleButton}${deleteButton}`}</div></article>`;
