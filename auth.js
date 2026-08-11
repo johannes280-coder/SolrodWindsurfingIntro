@@ -28,6 +28,11 @@ function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
 }
 
+function formatLastLogin(value) {
+  if (!value) return 'Aldrig logget ind';
+  return `Sidst logget ind: ${new Intl.DateTimeFormat('da-DK', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))}`;
+}
+
 function showAuthMessage(message, type = 'error') {
   const box = document.querySelector('#authMessage');
   if (!box) return;
@@ -99,8 +104,23 @@ async function refreshMembers() {
   const list = document.querySelector('#memberList');
   const { data, error } = await authClient.rpc('admin_list_members');
   if (error) { list.innerHTML = '<p>Brugerne kunne ikke hentes.</p>'; return; }
-  list.innerHTML = data.map(user => `<article class="member-row"><div><strong>${escapeHtml(user.full_name || 'Uden navn')}</strong><span>${escapeHtml(user.email || '')}</span><small class="status ${user.access_status}">${user.is_admin ? 'Administrator' : user.access_status === 'approved' ? 'Godkendt' : user.access_status === 'blocked' ? 'Blokeret' : 'Afventer'}</small></div>${user.is_admin ? '<em>Din konto</em>' : `<div class="member-actions"><button data-access="${user.id}" data-status="approved">Godkend</button><button data-access="${user.id}" data-status="blocked">Blokér</button><button class="delete-member" data-delete="${user.id}">Slet</button></div>`}</article>`).join('');
+  list.innerHTML = data.map(user => {
+    const ownAccount = user.id === window.currentAccessProfile.id;
+    const accessButtons = user.is_admin ? '' : `<button data-access="${user.id}" data-status="approved">Godkend</button><button data-access="${user.id}" data-status="blocked">Blokér</button>`;
+    const roleButton = ownAccount ? '' : `<button class="admin-role-button" data-admin-role="${user.id}" data-is-admin="${user.is_admin}">${user.is_admin ? 'Fjern admin' : 'Gør til admin'}</button>`;
+    const deleteButton = user.is_admin ? '' : `<button class="delete-member" data-delete="${user.id}">Slet</button>`;
+    return `<article class="member-row"><div><strong>${escapeHtml(user.full_name || 'Uden navn')}</strong><span>${escapeHtml(user.email || '')}</span><small class="last-login">${formatLastLogin(user.last_sign_in_at)}</small><small class="status ${user.access_status}">${user.is_admin ? 'Administrator' : user.access_status === 'approved' ? 'Godkendt' : user.access_status === 'blocked' ? 'Blokeret' : 'Afventer'}</small></div><div class="member-actions">${ownAccount ? '<em>Din konto</em>' : `${accessButtons}${roleButton}${deleteButton}`}</div></article>`;
+  }).join('');
   list.querySelectorAll('[data-access]').forEach(button => button.addEventListener('click', async () => { button.disabled = true; await authClient.rpc('admin_set_member_access', { target_user_id: button.dataset.access, new_status: button.dataset.status }); await refreshMembers(); }));
+  list.querySelectorAll('[data-admin-role]').forEach(button => button.addEventListener('click', async () => {
+    const makeAdmin = button.dataset.isAdmin !== 'true';
+    const question = makeAdmin ? 'Vil du gøre denne bruger til administrator?' : 'Vil du fjerne administratorrollen fra denne bruger?';
+    if (!confirm(question)) return;
+    button.disabled = true;
+    const { error: roleError } = await authClient.rpc('admin_set_member_admin', { target_user_id: button.dataset.adminRole, new_is_admin: makeAdmin });
+    if (roleError) alert(roleError.message);
+    await refreshMembers();
+  }));
   list.querySelectorAll('[data-delete]').forEach(button => button.addEventListener('click', async () => { if (!confirm('Vil du slette denne bruger permanent?')) return; await authClient.rpc('admin_delete_member', { target_user_id: button.dataset.delete }); await refreshMembers(); }));
 }
 
