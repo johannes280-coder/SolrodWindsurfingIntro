@@ -1,6 +1,7 @@
 const authRoot = document.querySelector('#authRoot');
 const appShell = document.querySelector('#appShell');
 const adminButton = document.querySelector('#adminButton');
+const windAlertsButton = document.querySelector('#windAlertsButton');
 const logoutButton = document.querySelector('#logoutButton');
 const authConfig = window.APP_CONFIG || {};
 const authConfigured = Boolean(authConfig.supabaseUrl && authConfig.supabaseAnonKey && window.supabase);
@@ -135,7 +136,89 @@ async function refreshMembers() {
   list.querySelectorAll('[data-delete]').forEach(button => button.addEventListener('click', async () => { if (!confirm('Vil du slette denne bruger permanent?')) return; await authClient.rpc('admin_delete_member', { target_user_id: button.dataset.delete }); await refreshMembers(); }));
 }
 
+function hourOptions(selected) {
+  return Array.from({ length: 25 }, (_, hour) => `<option value="${hour}" ${Number(selected) === hour ? 'selected' : ''}>${String(hour).padStart(2, '0')}:00</option>`).join('');
+}
+
+function urlBase64ToUint8Array(value) {
+  const padding = '='.repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(base64), character => character.charCodeAt(0));
+}
+
+async function savePushSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) throw new Error('Denne browser understøtter ikke vindbeskeder.');
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') throw new Error('Tillad beskeder i browserens indstillinger for at aktivere funktionen.');
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(authConfig.vapidPublicKey) });
+  const json = subscription.toJSON();
+  const { error } = await authClient.from('push_subscriptions').upsert({
+    user_id: window.currentAccessProfile.id,
+    endpoint: json.endpoint,
+    subscription: json,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'endpoint' });
+  if (error) throw error;
+}
+
+async function loadWindAlertsPanel() {
+  closeSheet();
+  window.adminReturnView = currentView.startsWith('lesson:') ? 'course' : currentView;
+  document.body.classList.remove('home-view');
+  const { data } = await authClient.from('wind_alert_preferences').select('*').eq('user_id', window.currentAccessProfile.id).maybeSingle();
+  const settings = data || { enabled: false, min_wind_ms: 4, max_wind_ms: 8, winter_start_hour: 8, winter_end_hour: 16, summer_start_hour: 8, summer_end_hour: 20 };
+  app.innerHTML = `<section class="page-hero wind-alert-hero"><span class="kicker light">Personlige beskeder</span><h1>Vindbeskeder</h1><p>Få besked, når vejrudsigten viser vestlig vind i dit valgte interval.</p></section>
+  <section class="section wind-alert-page"><form id="windAlertForm" class="wind-alert-form">
+    <label class="alert-toggle"><input type="checkbox" name="enabled" ${settings.enabled ? 'checked' : ''}><span></span><div><strong>Aktivér vindbeskeder</strong><small>Vejrudsigten kontrolleres automatisk hver 8. time.</small></div></label>
+    <div class="wind-settings-block"><span class="kicker">Vindstyrke</span><h2>Dit ønskede interval</h2><div class="wind-field-row"><label>Fra<input type="number" name="min_wind_ms" min="0" max="40" step="0.5" value="${settings.min_wind_ms}" required><small>m/s</small></label><label>Til<input type="number" name="max_wind_ms" min="0" max="40" step="0.5" value="${settings.max_wind_ms}" required><small>m/s</small></label></div></div>
+    <div class="wind-settings-block"><span class="kicker">Tidsrum</span><h2>Hvornår må vi varsle?</h2><p>Sommerhalvåret er april–september. Vinterhalvåret er oktober–marts.</p><div class="season-grid"><fieldset><legend>Vinter</legend><label>Fra<select name="winter_start_hour">${hourOptions(settings.winter_start_hour)}</select></label><label>Til<select name="winter_end_hour">${hourOptions(settings.winter_end_hour)}</select></label></fieldset><fieldset><legend>Sommer</legend><label>Fra<select name="summer_start_hour">${hourOptions(settings.summer_start_hour)}</select></label><label>Til<select name="summer_end_hour">${hourOptions(settings.summer_end_hour)}</select></label></fieldset></div></div>
+    <div class="offshore-warning"><strong>Vigtigt om vestenvind</strong><p>Ved Solrød er vestlig vind fralandsvind. En besked er ikke en sikkerhedsgodkendelse. Sejl aldrig i fralandsvind uden instruktør eller følgebåd.</p></div>
+    <div id="windAlertMessage" class="auth-message"></div><button class="auth-submit" type="submit">Gem indstillinger</button><button class="admin-back" type="button" id="closeWindAlerts">← Tilbage til appen</button>
+  </form></section>`;
+  document.querySelectorAll('.bottom-nav button').forEach(button => button.classList.remove('active'));
+  document.querySelector('#closeWindAlerts').addEventListener('click', () => render(window.adminReturnView || 'home'));
+  document.querySelector('#windAlertForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const values = new FormData(form);
+    const button = form.querySelector('[type="submit"]');
+    const message = document.querySelector('#windAlertMessage');
+    const payload = {
+      user_id: window.currentAccessProfile.id,
+      enabled: values.get('enabled') === 'on',
+      min_wind_ms: Number(values.get('min_wind_ms')),
+      max_wind_ms: Number(values.get('max_wind_ms')),
+      winter_start_hour: Number(values.get('winter_start_hour')),
+      winter_end_hour: Number(values.get('winter_end_hour')),
+      summer_start_hour: Number(values.get('summer_start_hour')),
+      summer_end_hour: Number(values.get('summer_end_hour')),
+      updated_at: new Date().toISOString()
+    };
+    if (payload.min_wind_ms > payload.max_wind_ms || payload.winter_start_hour >= payload.winter_end_hour || payload.summer_start_hour >= payload.summer_end_hour) {
+      message.textContent = 'Kontrollér intervallerne: fra-værdien skal være lavere end til-værdien.';
+      message.className = 'auth-message error';
+      return;
+    }
+    button.disabled = true;
+    button.textContent = 'Gemmer…';
+    try {
+      if (payload.enabled) await savePushSubscription();
+      const { error } = await authClient.from('wind_alert_preferences').upsert(payload, { onConflict: 'user_id' });
+      if (error) throw error;
+      message.textContent = payload.enabled ? 'Vindbeskeder er aktiveret på denne enhed.' : 'Indstillingerne er gemt. Vindbeskeder er slået fra.';
+      message.className = 'auth-message success';
+    } catch (error) {
+      message.textContent = error.message || 'Indstillingerne kunne ikke gemmes.';
+      message.className = 'auth-message error';
+    } finally { button.disabled = false; button.textContent = 'Gem indstillinger'; }
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 adminButton.addEventListener('click', loadAdminPanel);
+windAlertsButton.addEventListener('click', loadWindAlertsPanel);
 logoutButton.addEventListener('click', async () => { closeSheet(); await authClient.auth.signOut(); });
 
 if (!authConfigured) {

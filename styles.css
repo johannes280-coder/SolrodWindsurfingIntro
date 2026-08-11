@@ -32,3 +32,29 @@
 @media(max-width:700px){.club-links-section{padding-top:10px}.club-link-grid{grid-template-columns:1fr}.club-service{min-height:220px}}
 .install-guide-backdrop{position:fixed;z-index:150;inset:0;background:#022a35ba;display:grid;place-items:center;padding:20px}.install-guide{width:min(570px,100%);max-height:calc(100vh - 40px);overflow:auto;background:var(--paper);border-radius:27px;padding:30px;box-shadow:0 30px 80px #001b2466}.install-guide-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.install-guide-head h2{font:800 32px Manrope;margin:5px 0 20px}.platform-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;background:#e7ece9;border-radius:14px;margin-bottom:22px}.platform-tabs button{border:0;border-radius:10px;padding:12px;background:transparent;color:var(--muted);font-weight:800;cursor:pointer}.platform-tabs button.active{background:#fff;color:var(--sea);box-shadow:0 3px 10px #073b4c16}.install-note{padding:13px 15px;border-radius:12px;background:#d8eaf0;color:#07586b;font-weight:700;font-size:13px}.install-steps{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:10px}.install-steps li{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:16px;border:1px solid var(--line);border-radius:15px;background:#fff}.install-steps li>span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--yellow);font-weight:800}.install-steps strong{font:800 16px Manrope}.install-steps p{margin:4px 0 0;color:var(--muted);line-height:1.45;font-size:13px}.share-symbol{display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid #9caeb0;border-radius:6px;color:#087bea}.install-now{width:100%;border:0;border-radius:13px;background:var(--coral);color:#fff;padding:15px;font-weight:800;cursor:pointer}.installed-message{display:flex;gap:15px;align-items:center;padding:20px;border-radius:16px;background:#e5efd4}.installed-message>span{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;background:#8da92c;color:#fff;font-weight:800}.installed-message h3{font:800 18px Manrope;margin:0}.installed-message p{margin:4px 0 0;color:var(--muted)}
 @media(max-width:700px){.install-guide-backdrop{align-items:end;padding:0}.install-guide{max-height:92vh;border-radius:27px 27px 0 0;padding:25px 20px max(25px,env(safe-area-inset-bottom))}.install-guide-head h2{font-size:28px}}
+.wind-alert-hero { background: linear-gradient(135deg, #073b4c, #0b6575); }
+.wind-alert-page { max-width: 850px; margin: 0 auto; }
+.wind-alert-form { display: grid; gap: 22px; }
+.alert-toggle, .wind-settings-block, .offshore-warning { background: #fff; border-radius: 22px; padding: 22px; box-shadow: 0 10px 35px rgba(7,59,76,.09); }
+.alert-toggle { display: flex; align-items: center; gap: 16px; cursor: pointer; }
+.alert-toggle input { position: absolute; opacity: 0; }
+.alert-toggle > span { width: 54px; height: 31px; flex: 0 0 auto; border-radius: 20px; background: #9ba8aa; position: relative; transition: .2s; }
+.alert-toggle > span::after { content: ''; position: absolute; width: 25px; height: 25px; left: 3px; top: 3px; border-radius: 50%; background: white; transition: .2s; }
+.alert-toggle input:checked + span { background: #ef6548; }
+.alert-toggle input:checked + span::after { transform: translateX(23px); }
+.alert-toggle div { display: grid; gap: 3px; }
+.alert-toggle small { color: #597079; }
+.wind-settings-block h2 { margin: 5px 0 12px; }
+.wind-settings-block > p { color: #597079; }
+.wind-field-row, .season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.wind-field-row label { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; font-weight: 700; }
+.wind-field-row input { grid-column: 1; width: 100%; border: 1px solid #bed0d4; border-radius: 12px; padding: 13px; font: inherit; font-size: 1.15rem; }
+.wind-field-row small { grid-column: 2; padding-bottom: 14px; }
+.season-grid fieldset { border: 1px solid #d5e0e2; border-radius: 16px; padding: 16px; display: grid; gap: 12px; }
+.season-grid legend { font-weight: 800; padding: 0 6px; }
+.season-grid label { display: grid; grid-template-columns: 50px 1fr; align-items: center; font-weight: 700; }
+.season-grid select { border: 1px solid #bed0d4; border-radius: 10px; padding: 10px; font: inherit; background: #fff; }
+.offshore-warning { background: #fff2cf; border: 1px solid #f3cb59; }
+.offshore-warning strong { color: #7d4f00; }
+.offshore-warning p { margin: 7px 0 0; color: #5d4a20; }
+@media (max-width: 600px) { .season-grid { grid-template-columns: 1fr; } .wind-alert-page { padding-left: 16px; padding-right: 16px; } }
