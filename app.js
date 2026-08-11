@@ -110,6 +110,13 @@ function homeView() {
       <div><span class="kicker">Din læring</span><h3>${completed.size ? 'Godt i gang!' : 'Klar til første lektion?'}</h3><p>${completed.size} af ${lessons.length} lektioner gennemført. Din status gemmes automatisk på telefonen.</p></div>
       <button class="text-link" data-view="course">Fortsæt →</button>
     </section>
+    <section class="section weather-section">
+      <div class="weather-heading"><div><span class="kicker">Før du tager afsted</span><h2>Vejr og sejladsforhold</h2></div><p>Kontrollér altid vind, vindstød, nedbør og vandstand. Som begynder skal du spørge en instruktør, hvis du er i tvivl om forholdene.</p></div>
+      <div class="weather-links">
+        <a class="weather-card marine" href="https://sejladsudsigt.dk/" target="_blank" rel="noreferrer"><span class="weather-icon" aria-hidden="true">≈</span><span><small>Vind og vand</small><strong>Sejladsudsigt.dk</strong><em>Marine prognoser, vindretning, bølger og strøm.</em></span><b>Åbn →</b></a>
+        <a class="weather-card dmi" href="https://www.dmi.dk/lokation/show/DK/2613233/Solr%C3%B8d_Strand/" target="_blank" rel="noreferrer"><span class="weather-icon" aria-hidden="true">☀</span><span><small>Lokalt vejr</small><strong>DMI · Solrød Strand</strong><em>Temperatur, nedbør, middelvind, vindstød og vandstand.</em></span><b>Åbn →</b></a>
+      </div>
+    </section>
     <section class="section"><div class="section-heading"><div><span class="kicker">Før du starter</span><h2>Tre ting at huske</h2></div></div>
       <div class="feature-grid">
         <article class="feature blue"><span>${icon('shield')}</span><h3>Sikkerhed først</h3><p>Brug vest, sejl aldrig alene og undgå fralandsvind som begynder.</p><button data-view="safety">Læs sikkerhedsguiden →</button></article>
