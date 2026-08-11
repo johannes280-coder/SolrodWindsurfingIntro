@@ -95,7 +95,7 @@ async function loadAdminPanel() {
   closeSheet();
   authRoot.hidden = false;
   appShell.hidden = true;
-  authRoot.innerHTML = `<section class="admin-page"><div class="admin-title"><div><span class="kicker">Kontrolpanel</span><h1>Brugere</h1></div><button class="round-button" id="closeAdmin" aria-label="Luk">×</button></div><div id="memberList" class="member-list"><p>Henter brugere…</p></div></section>`;
+  authRoot.innerHTML = `<section class="admin-page"><div class="admin-title"><div><span class="kicker">Kontrolpanel</span><h1>Brugere</h1></div><button class="admin-back" id="closeAdmin">← Tilbage til appen</button></div><div id="memberList" class="member-list"><p>Henter brugere…</p></div></section>`;
   document.querySelector('#closeAdmin').addEventListener('click', () => showApp(window.currentAccessProfile));
   await refreshMembers();
 }
