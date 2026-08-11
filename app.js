@@ -100,6 +100,7 @@ function homeView() {
       <div class="hero-content"><span class="kicker light">Velkommen til</span><h1>Solrød Strand<br><em>Windsurfing</em></h1><div class="hero-actions"><button class="primary coral" data-view="club">Info omkring klubben <span>→</span></button><button class="primary coral" data-view="course">Lær at windsurfe <span>→</span></button></div></div>
     </section>
     <section class="section weather-section">
+      <div class="current-weather" id="currentWeather" aria-live="polite"><div class="current-weather-loading"><span></span><p>Henter det aktuelle vejr ved Solrød Strand…</p></div></div>
       <div class="weather-heading"><div><span class="kicker">Før du tager afsted</span><h2>Hvornår er det gode forhold for begyndere?</h2></div></div>
       <div class="beginner-weather-guide"><div class="wind-range"><strong>4–8</strong><span>m/s</span><small>Vestlig vind</small></div><div><p>En vindstyrke på 4–8 m/s er passende, når du skal lære at windsurfe. Ved Solrød giver vestlig vind fladt vand, men vinden blæser væk fra kysten og er derfor fralandsvind. Østlig vind blæser ind mod stranden og skaber hurtigt store bølger. Bølgeforholdene kan gøre det meget svært at lære at surfe og bør derfor undgås som nybegynder.</p><p class="offshore-warning"><strong>Livsfare:</strong> Sejl aldrig i fralandsvind uden følgebåd – heller ikke selvom vandet ser fladt og roligt ud. Fralandsvind kan hurtigt føre dig væk fra kysten og gøre det umuligt at komme tilbage.</p></div></div>
       <div class="forecast-links-heading"><span class="kicker">Aktuelle prognoser</span><h3>Se vejrudsigterne for Solrød Strand her</h3></div>
@@ -115,6 +116,37 @@ function homeView() {
         <article class="feature coral"><span>${icon('wave')}</span><h3>Små skridt</h3><p>Balance først, fart senere. Lær én bevægelse ad gangen og hold pauser.</p><button data-lesson="balance">Se lektion 3 →</button></article>
       </div>
     </section>`;
+}
+
+function windDirection(degrees) {
+  const names = ['nord', 'nordøst', 'øst', 'sydøst', 'syd', 'sydvest', 'vest', 'nordvest'];
+  return names[Math.round(degrees / 45) % 8];
+}
+
+function weatherDescription(code) {
+  if (code === 0) return 'Klart vejr';
+  if ([1, 2, 3].includes(code)) return 'Delvist skyet';
+  if ([45, 48].includes(code)) return 'Tåget';
+  if ([51, 53, 55, 56, 57].includes(code)) return 'Støvregn';
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'Regn';
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return 'Sne';
+  if ([95, 96, 99].includes(code)) return 'Torden';
+  return 'Skiftende vejr';
+}
+
+async function loadCurrentWeather() {
+  const container = document.querySelector('#currentWeather');
+  if (!container) return;
+  try {
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=55.5358&longitude=12.4269&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Europe%2FCopenhagen');
+    if (!response.ok) throw new Error('Vejret kunne ikke hentes');
+    const { current } = await response.json();
+    const direction = windDirection(current.wind_direction_10m);
+    const offshore = current.wind_direction_10m >= 225 && current.wind_direction_10m <= 315;
+    container.innerHTML = `<div class="current-weather-head"><div><span class="kicker">Lige nu ved stranden</span><h2>${weatherDescription(current.weather_code)}</h2></div><span class="weather-updated">Opdateret kl. ${current.time.slice(11, 16)}</span></div><div class="current-weather-values"><div><strong>${Math.round(current.temperature_2m)}°</strong><span>Temperatur</span><small>Føles som ${Math.round(current.apparent_temperature)}°</small></div><div><strong>${Number(current.wind_speed_10m).toFixed(1)}</strong><span>m/s vind</span><small>Fra ${direction}</small></div><div class="wind-compass"><span style="--wind-angle:${current.wind_direction_10m}deg">↑</span><strong>${Math.round(current.wind_direction_10m)}°</strong><small>${direction}</small></div></div>${offshore ? '<p class="current-weather-warning"><strong>Fralandsvind:</strong> Sejl aldrig uden følgebåd.</p>' : ''}<a class="weather-source" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Vejrdata: Open-Meteo →</a>`;
+  } catch (_error) {
+    container.innerHTML = '<p class="current-weather-error">Det aktuelle vejr kunne ikke hentes. Brug vejrtjenesterne nedenfor.</p>';
+  }
 }
 
 function courseView() {
@@ -164,6 +196,7 @@ function render(view = currentView) {
   currentView = view;
   document.body.classList.toggle('home-view', view === 'home');
   app.innerHTML = view === 'home' ? homeView() : view === 'course' ? courseView() : view === 'safety' ? safetyView() : clubView();
+  if (view === 'home') loadCurrentWeather();
   document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.toggle('active', btn.dataset.view === (view.startsWith('lesson') ? 'course' : view)));
   window.scrollTo({top:0, behavior:'smooth'});
 }
