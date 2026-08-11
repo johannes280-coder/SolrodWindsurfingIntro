@@ -99,10 +99,6 @@ function homeView() {
       <img class="hero-club-logo" src="assets/club-logo.png" alt="Solrød Strand Windsurfing logo"><div class="hero-wave one"></div><div class="hero-wave two"></div>
       <div class="hero-content"><span class="kicker light">Velkommen til</span><h1>Solrød Strand<br><em>Windsurfing</em></h1><div class="hero-actions"><button class="primary coral" data-view="club">Info omkring klubben <span>→</span></button><button class="primary coral" data-view="course">Lær at windsurfe <span>→</span></button></div></div>
     </section>
-    <section class="section welcome-grid">
-      <div><span class="kicker">Godt at se dig</span><h2>Her begynder<br>dit surfeventyr</h2></div>
-      <div><p>Du behøver hverken eget udstyr eller erfaring. Klubben har udstyr og uddannede instruktører, som hjælper dig sikkert fra strand til board.</p><div class="mini-stats"><span><strong>6</strong> lektioner</span><span><strong>57</strong> minutter</span><span><strong>0</strong> erfaring krævet</span></div></div>
-    </section>
     <section class="section weather-section">
       <div class="weather-heading"><div><span class="kicker">Før du tager afsted</span><h2>Vejr og sejladsforhold</h2></div><p>Kontrollér altid vind, vindstød, nedbør og vandstand. Som begynder skal du spørge en instruktør, hvis du er i tvivl om forholdene.</p></div>
       <div class="weather-links">
