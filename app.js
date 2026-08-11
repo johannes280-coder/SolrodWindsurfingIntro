@@ -154,6 +154,11 @@ function clubView() {
     <article><span>${icon('people')}</span><small>Medlemskab</small><h3>Bliv en del af klubben</h3><p>800 kr. for enkeltmedlem<br>1.000 kr. for familie</p><a href="https://www.facebook.com/ss.windsurfing.dk/" target="_blank" rel="noreferrer">Kontakt klubben →</a></article>
     <article><span>${icon('sail')}</span><small>Faciliteter</small><h3>Alt ved stranden</h3><p>Klubudstyr, instruktører, motorbåde, badefaciliteter og sauna.</p></article>
   </section>
+  <section class="section club-links-section"><div class="club-links-heading"><span class="kicker">Klubbens genveje</span><h2>Tilmelding, beskeder og nyheder</h2><p>Her finder du de tjenester, vi bruger til at administrere klubben og holde kontakten med medlemmerne.</p></div><div class="club-link-grid">
+    <a class="club-service holdsport" href="https://www.holdsport.dk/" target="_blank" rel="noreferrer"><span aria-hidden="true">H</span><div><small>Klubadministration</small><strong>Holdsport</strong><p>Tilmelding, aktiviteter og administration af medlemskab.</p></div><b>Åbn Holdsport →</b></a>
+    <a class="club-service messenger" href="https://www.messenger.com/t/2231502496966727" target="_blank" rel="noreferrer"><span aria-hidden="true">✉</span><div><small>Medlemschat</small><strong>Messenger-tråden</strong><p>Beskeder, spørgsmål og hurtig kontakt med klubben.</p></div><b>Åbn Messenger →</b></a>
+    <a class="club-service facebook" href="https://www.facebook.com/ss.windsurfing.dk/?locale=da_DK" target="_blank" rel="noreferrer"><span aria-hidden="true">f</span><div><small>Nyheder og billeder</small><strong>Facebook-siden</strong><p>Følg klubbens opslag, arrangementer og aktiviteter.</p></div><b>Åbn Facebook →</b></a>
+  </div></section>
   <section class="section contact-card"><div><span class="kicker light">Har du spørgsmål?</span><h2>Vi hjælper dig gerne i gang</h2></div><div><a href="tel:+4522938182">22 93 81 82</a><a href="mailto:mikkel@schildt.dk">mikkel@schildt.dk</a></div></section>`;
 }
 
