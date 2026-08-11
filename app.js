@@ -201,9 +201,45 @@ document.querySelector('#closeMenu').addEventListener('click', closeSheet);
 sheet.addEventListener('click', event => { if (event.target === sheet) closeSheet(); });
 
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); deferredInstallPrompt = event; });
-document.querySelector('#installButton').addEventListener('click', async () => {
-  if (deferredInstallPrompt) { deferredInstallPrompt.prompt(); await deferredInstallPrompt.userChoice; deferredInstallPrompt = null; closeSheet(); return; }
-  alert(/iphone|ipad|ipod/i.test(navigator.userAgent) ? 'Tryk på Del i Safari og vælg “Føj til hjemmeskærm”.' : 'Vælg “Installer app” eller “Føj til startskærm” i browserens menu.');
+const installGuide = document.querySelector('#installGuide');
+const installGuideContent = document.querySelector('#installGuideContent');
+const platformTabs = [...document.querySelectorAll('[data-platform]')];
+
+function detectedPlatform() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'iphone' : 'android';
+}
+
+function renderInstallGuide(platform) {
+  platformTabs.forEach(tab => {
+    const selected = tab.dataset.platform === platform;
+    tab.classList.toggle('active', selected);
+    tab.setAttribute('aria-selected', selected);
+  });
+  const alreadyInstalled = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (alreadyInstalled) {
+    installGuideContent.innerHTML = `<div class="installed-message"><span>✓</span><div><h3>Appen er allerede installeret</h3><p>Du kan åbne den direkte fra hjemmeskærmen.</p></div></div>`;
+    return;
+  }
+  if (platform === 'iphone') {
+    installGuideContent.innerHTML = `<div class="install-note">Brug Safari på din iPhone eller iPad.</div><ol class="install-steps"><li><span>1</span><div><strong>Åbn Del-menuen</strong><p>Tryk på Del-ikonet <b class="share-symbol">⇧</b> nederst i Safari.</p></div></li><li><span>2</span><div><strong>Vælg “Føj til hjemmeskærm”</strong><p>Rul ned i menuen, hvis valget ikke vises med det samme.</p></div></li><li><span>3</span><div><strong>Tryk på “Tilføj”</strong><p>Appens ikon bliver placeret på din hjemmeskærm.</p></div></li></ol>`;
+  } else {
+    installGuideContent.innerHTML = `${deferredInstallPrompt ? '<button class="install-now" id="installNow">Installér appen nu</button>' : '<div class="install-note">Brug Chrome på din Android-telefon.</div>'}<ol class="install-steps"><li><span>1</span><div><strong>Åbn browserens menu</strong><p>Tryk på de tre prikker <b>⋮</b> øverst i Chrome.</p></div></li><li><span>2</span><div><strong>Vælg “Installer app”</strong><p>På nogle telefoner hedder valget “Føj til startskærm”.</p></div></li><li><span>3</span><div><strong>Bekræft installationen</strong><p>Appens ikon bliver placeret på din startskærm.</p></div></li></ol>`;
+    document.querySelector('#installNow')?.addEventListener('click', async () => {
+      await deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installGuide.hidden = true;
+    });
+  }
+}
+
+document.querySelector('#installButton').addEventListener('click', () => {
+  closeSheet();
+  renderInstallGuide(detectedPlatform());
+  installGuide.hidden = false;
 });
+platformTabs.forEach(tab => tab.addEventListener('click', () => renderInstallGuide(tab.dataset.platform)));
+document.querySelector('#closeInstallGuide').addEventListener('click', () => installGuide.hidden = true);
+installGuide.addEventListener('click', event => { if (event.target === installGuide) installGuide.hidden = true; });
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
 render('home');
