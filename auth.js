@@ -93,10 +93,17 @@ async function applySession(session) {
 
 async function loadAdminPanel() {
   closeSheet();
-  authRoot.hidden = false;
-  appShell.hidden = true;
-  authRoot.innerHTML = `<section class="admin-page"><div class="admin-title"><div><span class="kicker">Kontrolpanel</span><h1>Brugere</h1></div><button class="admin-back" id="closeAdmin">← Tilbage til appen</button></div><div id="memberList" class="member-list"><p>Henter brugere…</p></div></section>`;
-  document.querySelector('#closeAdmin').addEventListener('click', () => showApp(window.currentAccessProfile));
+  window.adminReturnView = currentView.startsWith('lesson:') ? 'course' : currentView;
+  authRoot.hidden = true;
+  appShell.hidden = false;
+  document.body.classList.remove('home-view');
+  app.innerHTML = `<section class="page-hero admin-hero"><span class="kicker light">Kontrolpanel</span><h1>Brugere</h1><p>Godkend medlemmer, administrér adgang og vælg flere administratorer.</p></section><section class="section admin-page"><div class="admin-toolbar"><button class="admin-back" id="closeAdmin">← Tilbage til appen</button></div><div id="memberList" class="member-list"><p>Henter brugere…</p></div></section>`;
+  document.querySelectorAll('.bottom-nav button').forEach(button => button.classList.remove('active'));
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  document.querySelector('#closeAdmin').addEventListener('click', () => {
+    showApp(window.currentAccessProfile);
+    render(window.adminReturnView || 'home');
+  });
   await refreshMembers();
 }
 
