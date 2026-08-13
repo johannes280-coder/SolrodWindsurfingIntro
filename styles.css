@@ -70,3 +70,45 @@
 .wind-compass>span{transform:rotate(calc(var(--wind-angle) + 180deg))}
 .forecast-wind-arrow{transform:rotate(calc(var(--forecast-wind-angle) + 180deg))!important}
 .surf-day .coast-label{max-width:100%;white-space:normal;text-align:left}
+
+/* Kompakt vejroversigt */
+.weather-section{padding-top:48px}
+.current-weather{margin:-12px 0 34px;padding:22px;border-radius:22px}
+.current-weather-head h2{font-size:clamp(28px,3.5vw,40px);margin:4px 0 14px}
+.current-weather-icon{font-size:48px}
+.current-weather-values{gap:9px}
+.current-weather-values>div{min-height:94px;padding:13px 15px;border-radius:14px}
+.current-weather-values strong{font-size:28px}
+.wind-compass{min-width:105px}
+.wind-compass>span{font-size:29px;margin-bottom:5px}
+.current-coast-info{margin-top:10px;gap:7px}
+.current-weather-warning{margin-top:10px;padding:10px 13px;font-size:12px}
+.day-weather,.surf-forecast{margin-top:19px;padding-top:18px}
+.day-weather h3,.surf-forecast h3{font-size:21px;margin:3px 0 11px}
+.hour-weather-list,.surf-days{gap:6px}
+.hour-weather{flex-basis:104px;padding:10px 8px;border-radius:12px}
+.hour-weather i{font-size:25px;margin:7px 0 5px}
+.hour-weather strong{font-size:18px}
+.hour-weather span{margin-top:4px}
+.hour-weather .coast-label,.hour-weather .wave-label{margin-top:5px;padding:4px 7px}
+.surf-day{padding:11px 10px;border-radius:12px}
+.surf-weather-icon{font-size:29px;margin:7px 0 2px}
+.surf-weather-text{min-height:18px}
+.surf-day .surf-temperature{font-size:19px;margin-top:4px}
+.surf-day .surf-temperature+strong{font-size:14px;margin-top:3px}
+.surf-day>.forecast-wind-direction{margin-top:5px!important}
+.surf-day .coast-label,.surf-day .wave-label{margin-top:5px;padding:4px 7px}
+.surf-day b{margin-top:8px;padding:6px 8px;border-radius:9px;background:#ffffff12}
+.surf-day.possible{background:#dceec824;box-shadow:inset 0 0 0 2px #a8d36b}
+.surf-day.possible b{background:#a8d36b;color:#173f22;font-size:11px;line-height:1.25}
+.weather-source{margin-top:10px}
+.weather-heading{margin-bottom:18px}
+.beginner-weather-guide{margin-bottom:17px;padding:21px;gap:18px}
+.forecast-links-heading{margin:27px 0 14px}
+.weather-links{gap:11px}
+.weather-card{min-height:0;padding:18px;border-radius:18px;gap:13px}
+.weather-preview{aspect-ratio:16/5;border-radius:11px}
+.weather-icon{width:45px;height:45px;border-radius:13px;font-size:24px}
+.weather-card strong{font-size:18px;margin:3px 0 5px}
+.weather-card em{font-size:12px;line-height:1.35}
+@media(max-width:700px){.weather-section{padding-top:38px}.current-weather{margin:-8px 0 28px;padding:17px}.current-condition{gap:10px}.current-weather-icon{font-size:40px}.current-weather-values{gap:7px}.current-weather-values>div{min-height:86px;padding:11px}.current-weather-values strong{font-size:25px}.wind-compass{min-height:82px!important}.day-weather,.surf-forecast{margin-top:16px;padding-top:15px}.hour-weather{flex-basis:96px}.surf-day{flex-basis:132px}.beginner-weather-guide{padding:17px}.weather-heading h2{font-size:32px}}
