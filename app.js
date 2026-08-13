@@ -141,6 +141,18 @@ function weatherDescription(code) {
   return 'Skiftende vejr';
 }
 
+function weatherIcon(code) {
+  if (code === 0) return '☀️';
+  if (code === 1) return '🌤️';
+  if ([2, 3].includes(code)) return '☁️';
+  if ([45, 48].includes(code)) return '🌫️';
+  if ([51, 53, 55, 56, 57].includes(code)) return '🌦️';
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return '🌧️';
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return '🌨️';
+  if ([95, 96, 99].includes(code)) return '⛈️';
+  return '🌥️';
+}
+
 async function loadCurrentWeather() {
   const container = document.querySelector('#currentWeather');
   if (!container) return;
@@ -157,12 +169,16 @@ async function loadCurrentWeather() {
       const min = Math.min(...points.map(point => point.speed));
       const max = Math.max(...points.map(point => point.speed));
       const averageDirection = meanWindDirection(points);
+      const midday = points.find(point => point.time.slice(11, 13) === '12') || points[Math.floor(points.length / 2)];
       const westerlyHours = points.filter(point => point.direction >= 225 && point.direction <= 315 && point.speed >= 4 && point.speed <= 8);
       const status = westerlyHours.length >= 2 ? 'Mulige træningsforhold*' : max < 4 ? 'For lidt vind' : min > 8 ? 'Kraftig vind' : 'Tjek prognosen nærmere';
       const dayName = new Intl.DateTimeFormat('da-DK', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00`));
-      return `<article class="surf-day ${westerlyHours.length >= 2 ? 'possible' : ''}"><span>${dayName}</span><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><em>Fra ${windDirection(averageDirection)}</em><b>${status}</b></article>`;
+      return `<article class="surf-day ${westerlyHours.length >= 2 ? 'possible' : ''}"><span>${dayName}</span><i class="surf-weather-icon" role="img" aria-label="${weatherDescription(midday.code)}">${weatherIcon(midday.code)}</i><small class="surf-weather-text">${weatherDescription(midday.code)}</small><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><em>Fra ${windDirection(averageDirection)}</em><b>${status}</b></article>`;
     }).join('');
     container.innerHTML = `<div class="current-weather-head"><div><span class="kicker">Lige nu ved stranden</span><h2>${weatherDescription(current.weather_code)}</h2></div><span class="weather-updated">Opdateret kl. ${current.time.slice(11, 16)}</span></div><div class="current-weather-values"><div><strong>${Math.round(current.temperature_2m)}°</strong><span>Temperatur</span><small>Føles som ${Math.round(current.apparent_temperature)}°</small></div><div><strong>${Number(current.wind_speed_10m).toFixed(1)}</strong><span>m/s vind</span><small>Fra ${direction}</small></div><div class="wind-compass"><span style="--wind-angle:${current.wind_direction_10m}deg">↑</span><strong>${Math.round(current.wind_direction_10m)}°</strong><small>${direction}</small></div></div>${offshore ? '<p class="current-weather-warning"><strong>Fralandsvind:</strong> Sejl aldrig uden følgebåd.</p>' : ''}<div class="surf-forecast"><div><span class="kicker light">De kommende dage</span><h3>Surfvejret i Solrød Strand</h3></div><div class="surf-days">${forecastCards}</div><p>*Vestlig vind på 4–8 m/s i mindst to timer. Vestlig vind er fralandsvind ved Solrød – sejl aldrig uden instruktør eller følgebåd.</p></div><a class="weather-source" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Vejrdata: Open-Meteo →</a>`;
+    const currentHeading = container.querySelector('.current-weather-head > div');
+    currentHeading?.insertAdjacentHTML('afterbegin', `<i class="current-weather-icon" role="img" aria-label="${weatherDescription(current.weather_code)}">${weatherIcon(current.weather_code)}</i>`);
+    currentHeading?.classList.add('current-condition');
   } catch (_error) {
     container.innerHTML = '<p class="current-weather-error">Det aktuelle vejr kunne ikke hentes. Brug vejrtjenesterne nedenfor.</p>';
   }
