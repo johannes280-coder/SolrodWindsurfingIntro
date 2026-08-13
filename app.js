@@ -138,12 +138,13 @@ function coastalWindType(degrees) {
   return { label: 'Sidevind', className: 'cross-shore' };
 }
 
-function waveDescription(height) {
-  if (!Number.isFinite(height)) return 'Bølger ukendt';
-  if (height < 0.2) return 'Næsten fladt';
-  if (height < 0.5) return 'Små bølger';
-  if (height < 1) return 'Bølger';
-  return 'Store bølger';
+function localWaterDescription(direction, speed) {
+  const coast = coastalWindType(direction);
+  if (coast.className === 'offshore') return 'Ofte fladt ved stranden';
+  if (coast.className === 'cross-offshore') return 'Forholdsvis fladt ved stranden';
+  if (coast.className === 'onshore') return speed >= 8 ? 'Store bølger sandsynlige' : speed >= 4 ? 'Bølger sandsynlige' : 'Små bølger mulige';
+  if (coast.className === 'cross-onshore') return speed >= 6 ? 'Uroligt vand og bølger' : 'Nogle bølger mulige';
+  return speed >= 7 ? 'Uroligt vand muligt' : 'Skiftende bølgeforhold';
 }
 
 function weatherDescription(code) {
@@ -173,39 +174,31 @@ async function loadCurrentWeather() {
   const container = document.querySelector('#currentWeather');
   if (!container) return;
   try {
-    const [response, marineResponse] = await Promise.all([
-      fetch('https://api.open-meteo.com/v1/forecast?latitude=55.5358&longitude=12.4269&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code&wind_speed_unit=ms&timezone=Europe%2FCopenhagen&forecast_days=6'),
-      fetch('https://marine-api.open-meteo.com/v1/marine?latitude=55.5358&longitude=12.4269&current=wave_height&hourly=wave_height&timezone=Europe%2FCopenhagen&forecast_days=6&cell_selection=sea')
-    ]);
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=55.5358&longitude=12.4269&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code&wind_speed_unit=ms&timezone=Europe%2FCopenhagen&forecast_days=6');
     if (!response.ok) throw new Error('Vejret kunne ikke hentes');
     const { current, hourly } = await response.json();
-    const marine = marineResponse.ok ? await marineResponse.json() : null;
-    const wavesByTime = new Map((marine?.hourly?.time || []).map((time, index) => [time, Number(marine.hourly.wave_height[index])]));
     const direction = windDirection(current.wind_direction_10m);
     const currentCoast = coastalWindType(current.wind_direction_10m);
     const offshore = currentCoast.className.includes('offshore');
-    const currentWave = marine?.current?.wave_height == null ? NaN : Number(marine.current.wave_height);
     const today = current.time.slice(0, 10);
     const currentHour = Number(current.time.slice(11, 13));
-    const remainingHours = hourly.time.map((time, index) => ({ time, temperature: Number(hourly.temperature_2m[index]), speed: Number(hourly.wind_speed_10m[index]), direction: Number(hourly.wind_direction_10m[index]), code: hourly.weather_code[index], wave: wavesByTime.get(time) })).filter(point => point.time.startsWith(today) && Number(point.time.slice(11, 13)) > currentHour && Number(point.time.slice(11, 13)) <= 20);
+    const remainingHours = hourly.time.map((time, index) => ({ time, temperature: Number(hourly.temperature_2m[index]), speed: Number(hourly.wind_speed_10m[index]), direction: Number(hourly.wind_direction_10m[index]), code: hourly.weather_code[index] })).filter(point => point.time.startsWith(today) && Number(point.time.slice(11, 13)) > currentHour && Number(point.time.slice(11, 13)) <= 20);
     const remainingToday = remainingHours.filter((_point, index) => index % 2 === 0 || index === remainingHours.length - 1);
-    const todayTimeline = remainingToday.length ? remainingToday.map(point => { const coast = coastalWindType(point.direction); return `<article class="hour-weather"><time>${point.time.slice(11, 16)}</time><i role="img" aria-label="${weatherDescription(point.code)}">${weatherIcon(point.code)}</i><strong>${Math.round(point.temperature)}°</strong><span>${point.speed.toFixed(1)} m/s</span><span class="forecast-wind-direction"><i class="forecast-wind-arrow" style="--forecast-wind-angle:${point.direction}deg" aria-hidden="true">↑</i><small>Fra ${windDirection(point.direction)}</small></span><em class="coast-label ${coast.className}">${coast.label}</em><small class="wave-label">🌊 ${waveDescription(point.wave)}${Number.isFinite(point.wave) ? ` · ${point.wave.toFixed(1)} m` : ''}</small></article>`; }).join('') : '<p class="day-weather-finished">Dagens vejrforløb er slut. Se udsigten for i morgen nedenfor.</p>';
+    const todayTimeline = remainingToday.length ? remainingToday.map(point => { const coast = coastalWindType(point.direction); return `<article class="hour-weather"><time>${point.time.slice(11, 16)}</time><i role="img" aria-label="${weatherDescription(point.code)}">${weatherIcon(point.code)}</i><strong>${Math.round(point.temperature)}°</strong><span>${point.speed.toFixed(1)} m/s</span><span class="forecast-wind-direction"><i class="forecast-wind-arrow" style="--forecast-wind-angle:${point.direction}deg" aria-hidden="true">↑</i><small>Fra ${windDirection(point.direction)}</small></span><em class="coast-label ${coast.className}">${coast.label}</em><small class="wave-label">🌊 ${localWaterDescription(point.direction, point.speed)}</small></article>`; }).join('') : '<p class="day-weather-finished">Dagens vejrforløb er slut. Se udsigten for i morgen nedenfor.</p>';
     const dates = [...new Set(hourly.time.map(time => time.slice(0, 10)))].filter(date => date > today).slice(0, 5);
     const forecastCards = dates.map(date => {
-      const points = hourly.time.map((time, index) => ({ time, temperature: Number(hourly.temperature_2m[index]), speed: Number(hourly.wind_speed_10m[index]), direction: Number(hourly.wind_direction_10m[index]), code: hourly.weather_code[index], wave: wavesByTime.get(time) })).filter(point => point.time.startsWith(date) && Number(point.time.slice(11, 13)) >= 8 && Number(point.time.slice(11, 13)) < 20);
+      const points = hourly.time.map((time, index) => ({ time, temperature: Number(hourly.temperature_2m[index]), speed: Number(hourly.wind_speed_10m[index]), direction: Number(hourly.wind_direction_10m[index]), code: hourly.weather_code[index] })).filter(point => point.time.startsWith(date) && Number(point.time.slice(11, 13)) >= 8 && Number(point.time.slice(11, 13)) < 20);
       const min = Math.min(...points.map(point => point.speed));
       const max = Math.max(...points.map(point => point.speed));
       const minTemperature = Math.round(Math.min(...points.map(point => point.temperature)));
       const maxTemperature = Math.round(Math.max(...points.map(point => point.temperature)));
       const averageDirection = meanWindDirection(points);
       const coast = coastalWindType(averageDirection);
-      const waveHeights = points.map(point => point.wave).filter(Number.isFinite);
-      const maxWave = waveHeights.length ? Math.max(...waveHeights) : NaN;
       const midday = points.find(point => point.time.slice(11, 13) === '12') || points[Math.floor(points.length / 2)];
       const westerlyHours = points.filter(point => point.direction >= 225 && point.direction <= 315 && point.speed >= 4 && point.speed <= 8);
       const status = westerlyHours.length >= 2 ? 'Mulige træningsforhold*' : max < 4 ? 'For lidt vind' : min > 8 ? 'Kraftig vind' : 'Tjek prognosen nærmere';
       const dayName = new Intl.DateTimeFormat('da-DK', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00`));
-      return `<article class="surf-day ${westerlyHours.length >= 2 ? 'possible' : ''}"><span>${dayName}</span><i class="surf-weather-icon" role="img" aria-label="${weatherDescription(midday.code)}">${weatherIcon(midday.code)}</i><small class="surf-weather-text">${weatherDescription(midday.code)}</small><strong class="surf-temperature">${minTemperature}–${maxTemperature}°</strong><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><span class="forecast-wind-direction"><i class="forecast-wind-arrow" style="--forecast-wind-angle:${averageDirection}deg" aria-hidden="true">↑</i><em>Fra ${windDirection(averageDirection)}</em></span><em class="coast-label ${coast.className}">${coast.label}</em><small class="wave-label">🌊 ${waveDescription(maxWave)}${Number.isFinite(maxWave) ? ` · op til ${maxWave.toFixed(1)} m` : ''}</small><b>${status}</b></article>`;
+      return `<article class="surf-day ${westerlyHours.length >= 2 ? 'possible' : ''}"><span>${dayName}</span><i class="surf-weather-icon" role="img" aria-label="${weatherDescription(midday.code)}">${weatherIcon(midday.code)}</i><small class="surf-weather-text">${weatherDescription(midday.code)}</small><strong class="surf-temperature">${minTemperature}–${maxTemperature}°</strong><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><span class="forecast-wind-direction"><i class="forecast-wind-arrow" style="--forecast-wind-angle:${averageDirection}deg" aria-hidden="true">↑</i><em>Fra ${windDirection(averageDirection)}</em></span><em class="coast-label ${coast.className}">${coast.label}</em><small class="wave-label">🌊 ${localWaterDescription(averageDirection, max)}</small><b>${status}</b></article>`;
     }).join('');
     container.innerHTML = `<div class="current-weather-head"><div><span class="kicker">Lige nu ved stranden</span><h2>${weatherDescription(current.weather_code)}</h2></div><span class="weather-updated">Opdateret kl. ${current.time.slice(11, 16)}</span></div><div class="current-weather-values"><div><strong>${Math.round(current.temperature_2m)}°</strong><span>Temperatur</span><small>Føles som ${Math.round(current.apparent_temperature)}°</small></div><div><strong>${Number(current.wind_speed_10m).toFixed(1)}</strong><span>m/s vind</span><small>Fra ${direction}</small></div><div class="wind-compass"><span style="--wind-angle:${current.wind_direction_10m}deg">↑</span><strong>${Math.round(current.wind_direction_10m)}°</strong><small>${direction}</small></div></div>${offshore ? '<p class="current-weather-warning"><strong>Fralandsvind:</strong> Sejl aldrig uden følgebåd.</p>' : ''}<div class="surf-forecast"><div><span class="kicker light">De kommende dage</span><h3>Surfvejret i Solrød Strand</h3></div><div class="surf-days">${forecastCards}</div><p>*Vestlig vind på 4–8 m/s i mindst to timer. Vestlig vind er fralandsvind ved Solrød – sejl aldrig uden instruktør eller følgebåd.</p></div><a class="weather-source" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Vejrdata: Open-Meteo →</a>`;
     const currentHeading = container.querySelector('.current-weather-head > div');
@@ -214,7 +207,7 @@ async function loadCurrentWeather() {
       currentHeading.classList.add('current-condition');
     }
     container.querySelector('.surf-forecast')?.insertAdjacentHTML('beforebegin', `<div class="day-weather"><span class="kicker light">Resten af dagen</span><h3>Sådan udvikler vejret sig</h3><div class="hour-weather-list">${todayTimeline}</div></div>`);
-    container.querySelector('.current-weather-values')?.insertAdjacentHTML('afterend', `<div class="current-coast-info"><span class="coast-label ${currentCoast.className}">${currentCoast.label}</span><span>🌊 ${waveDescription(currentWave)}${Number.isFinite(currentWave) ? ` · ${currentWave.toFixed(1)} m` : ''}</span></div>`);
+    container.querySelector('.current-weather-values')?.insertAdjacentHTML('afterend', `<div class="current-coast-info"><span class="coast-label ${currentCoast.className}">${currentCoast.label}</span><span>🌊 ${localWaterDescription(current.wind_direction_10m, current.wind_speed_10m)}</span></div>`);
   } catch (_error) {
     container.innerHTML = '<p class="current-weather-error">Det aktuelle vejr kunne ikke hentes. Brug vejrtjenesterne nedenfor.</p>';
   }
