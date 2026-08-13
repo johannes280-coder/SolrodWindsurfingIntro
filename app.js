@@ -162,10 +162,9 @@ function beginnerConditionPeriod(points) {
   });
   if (!periods.length) return null;
   const best = periods.sort((a, b) => (b.end - b.start) - (a.end - a.start))[0];
-  const coversDay = best.start === 0 && best.end === points.length - 1;
   const startHour = points[best.start].time.slice(11, 13);
   const endHour = String(Number(points[best.end].time.slice(11, 13)) + 1).padStart(2, '0');
-  return coversDay ? 'Gode begynderforhold' : `Gode begynderforhold kl. ${startHour}–${endHour}`;
+  return `Gode begynderforhold kl. ${startHour}–${endHour}`;
 }
 
 function weatherDescription(code) {
