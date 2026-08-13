@@ -163,6 +163,10 @@ async function loadCurrentWeather() {
     const direction = windDirection(current.wind_direction_10m);
     const offshore = current.wind_direction_10m >= 225 && current.wind_direction_10m <= 315;
     const today = current.time.slice(0, 10);
+    const currentHour = Number(current.time.slice(11, 13));
+    const remainingHours = hourly.time.map((time, index) => ({ time, temperature: Number(hourly.temperature_2m[index]), speed: Number(hourly.wind_speed_10m[index]), direction: Number(hourly.wind_direction_10m[index]), code: hourly.weather_code[index] })).filter(point => point.time.startsWith(today) && Number(point.time.slice(11, 13)) > currentHour && Number(point.time.slice(11, 13)) <= 20);
+    const remainingToday = remainingHours.filter((_point, index) => index % 2 === 0 || index === remainingHours.length - 1);
+    const todayTimeline = remainingToday.length ? remainingToday.map(point => `<article class="hour-weather"><time>${point.time.slice(11, 16)}</time><i role="img" aria-label="${weatherDescription(point.code)}">${weatherIcon(point.code)}</i><strong>${Math.round(point.temperature)}°</strong><span>${point.speed.toFixed(1)} m/s</span><small>Fra ${windDirection(point.direction)}</small></article>`).join('') : '<p class="day-weather-finished">Dagens vejrforløb er slut. Se udsigten for i morgen nedenfor.</p>';
     const dates = [...new Set(hourly.time.map(time => time.slice(0, 10)))].filter(date => date > today).slice(0, 5);
     const forecastCards = dates.map(date => {
       const points = hourly.time.map((time, index) => ({ time, temperature: Number(hourly.temperature_2m[index]), speed: Number(hourly.wind_speed_10m[index]), direction: Number(hourly.wind_direction_10m[index]), code: hourly.weather_code[index] })).filter(point => point.time.startsWith(date) && Number(point.time.slice(11, 13)) >= 8 && Number(point.time.slice(11, 13)) < 20);
@@ -183,6 +187,7 @@ async function loadCurrentWeather() {
       currentHeading.innerHTML = `<i class="current-weather-icon" role="img" aria-label="${weatherDescription(current.weather_code)}">${weatherIcon(current.weather_code)}</i><div class="current-condition-copy">${currentHeading.innerHTML}</div>`;
       currentHeading.classList.add('current-condition');
     }
+    container.querySelector('.surf-forecast')?.insertAdjacentHTML('beforebegin', `<div class="day-weather"><span class="kicker light">Resten af dagen</span><h3>Sådan udvikler vejret sig</h3><div class="hour-weather-list">${todayTimeline}</div></div>`);
   } catch (_error) {
     container.innerHTML = '<p class="current-weather-error">Det aktuelle vejr kunne ikke hentes. Brug vejrtjenesterne nedenfor.</p>';
   }
