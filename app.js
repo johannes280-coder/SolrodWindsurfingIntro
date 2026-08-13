@@ -148,7 +148,7 @@ function localWaterDescription(direction, speed) {
 }
 
 function beginnerConditionPeriod(points) {
-  const suitable = point => point.speed >= 4 && point.speed <= 8 && point.direction >= 225 && point.direction <= 315;
+  const suitable = point => point.speed >= 4 && point.speed <= 8 && point.direction >= 225 && point.direction <= 337.5;
   const periods = [];
   let start = null;
   points.forEach((point, index) => {
