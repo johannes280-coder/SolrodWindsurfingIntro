@@ -147,6 +147,27 @@ function localWaterDescription(direction, speed) {
   return speed >= 7 ? 'Uroligt vand muligt' : 'Skiftende bølgeforhold';
 }
 
+function beginnerConditionPeriod(points) {
+  const suitable = point => point.speed >= 4 && point.speed <= 8 && point.direction >= 225 && point.direction <= 315;
+  const periods = [];
+  let start = null;
+  points.forEach((point, index) => {
+    if (suitable(point) && start === null) start = index;
+    const periodEnds = start !== null && (!suitable(point) || index === points.length - 1);
+    if (periodEnds) {
+      const endIndex = suitable(point) && index === points.length - 1 ? index : index - 1;
+      if (endIndex - start + 1 >= 2) periods.push({ start, end: endIndex });
+      start = null;
+    }
+  });
+  if (!periods.length) return null;
+  const best = periods.sort((a, b) => (b.end - b.start) - (a.end - a.start))[0];
+  const coversDay = best.start === 0 && best.end === points.length - 1;
+  const startHour = points[best.start].time.slice(11, 13);
+  const endHour = String(Number(points[best.end].time.slice(11, 13)) + 1).padStart(2, '0');
+  return coversDay ? 'Gode begynderforhold' : `Gode begynderforhold kl. ${startHour}–${endHour}`;
+}
+
 function weatherDescription(code) {
   if (code === 0) return 'Klart vejr';
   if ([1, 2, 3].includes(code)) return 'Delvist skyet';
@@ -195,10 +216,9 @@ async function loadCurrentWeather() {
       const averageDirection = meanWindDirection(points);
       const coast = coastalWindType(averageDirection);
       const midday = points.find(point => point.time.slice(11, 13) === '12') || points[Math.floor(points.length / 2)];
-      const westerlyHours = points.filter(point => point.direction >= 225 && point.direction <= 315 && point.speed >= 4 && point.speed <= 8);
-      const status = westerlyHours.length >= 2 ? 'Gode begynderforhold' : '';
+      const status = beginnerConditionPeriod(points) || '';
       const dayName = new Intl.DateTimeFormat('da-DK', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00`));
-      return `<article class="surf-day ${westerlyHours.length >= 2 ? 'possible' : ''}"><span>${dayName}</span><i class="surf-weather-icon" role="img" aria-label="${weatherDescription(midday.code)}">${weatherIcon(midday.code)}</i><small class="surf-weather-text">${weatherDescription(midday.code)}</small><strong class="surf-temperature">${minTemperature}–${maxTemperature}°</strong><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><span class="forecast-wind-direction"><i class="forecast-wind-arrow" style="--forecast-wind-angle:${averageDirection}deg" aria-hidden="true">↑</i><em>Fra ${windDirection(averageDirection)}</em></span><em class="coast-label ${coast.className}">${coast.label}</em><small class="wave-label">🌊 ${localWaterDescription(averageDirection, max)}</small>${status ? `<b>${status}</b>` : ''}</article>`;
+      return `<article class="surf-day ${status ? 'possible' : ''}"><span>${dayName}</span><i class="surf-weather-icon" role="img" aria-label="${weatherDescription(midday.code)}">${weatherIcon(midday.code)}</i><small class="surf-weather-text">${weatherDescription(midday.code)}</small><strong class="surf-temperature">${minTemperature}–${maxTemperature}°</strong><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><span class="forecast-wind-direction"><i class="forecast-wind-arrow" style="--forecast-wind-angle:${averageDirection}deg" aria-hidden="true">↑</i><em>Fra ${windDirection(averageDirection)}</em></span><em class="coast-label ${coast.className}">${coast.label}</em><small class="wave-label">🌊 ${localWaterDescription(averageDirection, max)}</small>${status ? `<b>${status}</b>` : ''}</article>`;
     }).join('');
     container.innerHTML = `<div class="current-weather-head"><div><span class="kicker">Lige nu ved stranden</span><h2>${weatherDescription(current.weather_code)}</h2></div><span class="weather-updated">Opdateret kl. ${current.time.slice(11, 16)}</span></div><div class="current-weather-values"><div><strong>${Math.round(current.temperature_2m)}°</strong><span>Temperatur</span><small>Føles som ${Math.round(current.apparent_temperature)}°</small></div><div><strong>${Number(current.wind_speed_10m).toFixed(1)}</strong><span>m/s vind</span><small>Fra ${direction}</small></div><div class="wind-compass"><span style="--wind-angle:${current.wind_direction_10m}deg">↑</span><strong>${Math.round(current.wind_direction_10m)}°</strong><small>${direction}</small></div></div>${offshore ? '<p class="current-weather-warning"><strong>Fralandsvind:</strong> Sejl aldrig uden følgebåd.</p>' : ''}<div class="surf-forecast"><div><span class="kicker light">De kommende dage</span><h3>Surfvejret i Solrød Strand</h3></div><div class="surf-days">${forecastCards}</div></div><a class="weather-source" href="https://open-meteo.com/" target="_blank" rel="noreferrer">Vejrdata: Open-Meteo →</a>`;
     const currentHeading = container.querySelector('.current-weather-head > div');
