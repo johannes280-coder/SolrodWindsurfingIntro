@@ -112,3 +112,22 @@
 .weather-card strong{font-size:18px;margin:3px 0 5px}
 .weather-card em{font-size:12px;line-height:1.35}
 @media(max-width:700px){.weather-section{padding-top:38px}.current-weather{margin:-8px 0 28px;padding:17px}.current-condition{gap:10px}.current-weather-icon{font-size:40px}.current-weather-values{gap:7px}.current-weather-values>div{min-height:86px;padding:11px}.current-weather-values strong{font-size:25px}.wind-compass{min-height:82px!important}.day-weather,.surf-forecast{margin-top:16px;padding-top:15px}.hour-weather{flex-basis:96px}.surf-day{flex-basis:132px}.beginner-weather-guide{padding:17px}.weather-heading h2{font-size:32px}}
+
+/* Ekstra kompakt: lige nu og resten af dagen */
+.current-weather-head h2{font-size:clamp(25px,3vw,34px);margin-bottom:9px}
+.current-weather-icon{font-size:41px}
+.current-weather-values>div{min-height:76px;padding:9px 12px}
+.current-weather-values strong{font-size:24px}
+.current-weather-values span{font-size:12px;margin-top:3px}
+.current-weather-values small{font-size:10px;margin-top:2px}
+.wind-compass{min-width:92px}
+.wind-compass>span{font-size:25px;margin-bottom:2px}
+.wind-compass strong{font-size:15px}
+.day-weather{margin-top:14px;padding-top:13px}
+.day-weather h3{font-size:18px;margin-bottom:8px}
+.hour-weather{flex-basis:88px;padding:8px 6px}
+.hour-weather i{font-size:22px;margin:5px 0 3px}
+.hour-weather strong{font-size:16px}
+.hour-weather span{font-size:10px}
+.hour-weather .coast-label,.hour-weather .wave-label{font-size:8px!important;padding:3px 5px}
+@media(max-width:700px){.current-weather-head h2{font-size:26px}.current-weather-icon{font-size:35px}.current-weather-values>div{min-height:70px;padding:8px}.current-weather-values strong{font-size:22px}.wind-compass{min-height:70px!important}.hour-weather{flex-basis:84px}.day-weather h3{font-size:18px}}
