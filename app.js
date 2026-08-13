@@ -196,7 +196,7 @@ async function loadCurrentWeather() {
       const coast = coastalWindType(averageDirection);
       const midday = points.find(point => point.time.slice(11, 13) === '12') || points[Math.floor(points.length / 2)];
       const westerlyHours = points.filter(point => point.direction >= 225 && point.direction <= 315 && point.speed >= 4 && point.speed <= 8);
-      const status = westerlyHours.length >= 2 ? 'Mulige træningsforhold*' : max < 4 ? 'For lidt vind' : min > 8 ? 'Kraftig vind' : 'Tjek prognosen nærmere';
+      const status = westerlyHours.length >= 2 ? 'Gode begynderforhold*' : max < 4 ? 'For lidt vind' : min > 8 ? 'Kraftig vind' : 'Tjek prognosen nærmere';
       const dayName = new Intl.DateTimeFormat('da-DK', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00`));
       return `<article class="surf-day ${westerlyHours.length >= 2 ? 'possible' : ''}"><span>${dayName}</span><i class="surf-weather-icon" role="img" aria-label="${weatherDescription(midday.code)}">${weatherIcon(midday.code)}</i><small class="surf-weather-text">${weatherDescription(midday.code)}</small><strong class="surf-temperature">${minTemperature}–${maxTemperature}°</strong><strong>${min.toFixed(1)}–${max.toFixed(1)} <small>m/s</small></strong><span class="forecast-wind-direction"><i class="forecast-wind-arrow" style="--forecast-wind-angle:${averageDirection}deg" aria-hidden="true">↑</i><em>Fra ${windDirection(averageDirection)}</em></span><em class="coast-label ${coast.className}">${coast.label}</em><small class="wave-label">🌊 ${localWaterDescription(averageDirection, max)}</small><b>${status}</b></article>`;
     }).join('');
