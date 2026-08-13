@@ -132,9 +132,9 @@ function meanWindDirection(points) {
 
 function coastalWindType(degrees) {
   if (degrees >= 67.5 && degrees < 112.5) return { label: 'Pålandsvind', className: 'onshore' };
-  if (degrees >= 247.5 && degrees < 292.5) return { label: 'Fralandsvind', className: 'offshore' };
+  if (degrees >= 247.5 && degrees < 292.5) return { label: 'Fralandsvind · Kræver følgebåd', className: 'offshore' };
   if ((degrees >= 22.5 && degrees < 67.5) || (degrees >= 112.5 && degrees < 157.5)) return { label: 'Skrå pålandsvind', className: 'cross-onshore' };
-  if ((degrees >= 202.5 && degrees < 247.5) || (degrees >= 292.5 && degrees < 337.5)) return { label: 'Skrå fralandsvind', className: 'cross-offshore' };
+  if ((degrees >= 202.5 && degrees < 247.5) || (degrees >= 292.5 && degrees < 337.5)) return { label: 'Skrå fralandsvind · Kræver følgebåd', className: 'cross-offshore' };
   return { label: 'Sidevind', className: 'cross-shore' };
 }
 

@@ -69,3 +69,4 @@
 @media (max-width: 600px) { .season-grid { grid-template-columns: 1fr; } .wind-alert-page { padding-left: 16px; padding-right: 16px; } }
 .wind-compass>span{transform:rotate(calc(var(--wind-angle) + 180deg))}
 .forecast-wind-arrow{transform:rotate(calc(var(--forecast-wind-angle) + 180deg))!important}
+.surf-day .coast-label{max-width:100%;white-space:normal;text-align:left}
