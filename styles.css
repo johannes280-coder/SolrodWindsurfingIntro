@@ -131,3 +131,36 @@
 .hour-weather span{font-size:10px}
 .hour-weather .coast-label,.hour-weather .wave-label{font-size:8px!important;padding:3px 5px}
 @media(max-width:700px){.current-weather-head h2{font-size:26px}.current-weather-icon{font-size:35px}.current-weather-values>div{min-height:70px;padding:8px}.current-weather-values strong{font-size:22px}.wind-compass{min-height:70px!important}.hour-weather{flex-basis:84px}.day-weather h3{font-size:18px}}
+
+
+/* Klikbare vejrdage og detaljeret timevisning */
+.day-weather,.surf-day{cursor:pointer;transition:transform .18s,background .18s,box-shadow .18s}
+.day-weather:hover,.day-weather:focus-visible{background:#ffffff0a;border-radius:14px;box-shadow:0 0 0 2px #ffffff38;outline:0;padding-left:10px;padding-right:10px}
+.surf-day:hover,.surf-day:focus-visible{transform:translateY(-2px);background:#ffffff1c;box-shadow:inset 0 0 0 2px #f3cf3288;outline:0}
+.weather-detail-backdrop{position:fixed;z-index:200;inset:0;background:#022a35c7;display:grid;place-items:center;padding:22px}
+.weather-detail-dialog{width:min(900px,100%);max-height:calc(100vh - 44px);overflow:auto;background:var(--paper);color:var(--ink);border-radius:26px;padding:27px;box-shadow:0 30px 90px #00182077}
+.weather-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.weather-detail-head h3{font:800 clamp(29px,4vw,42px)/1.05 Manrope;margin:5px 0 18px;text-transform:capitalize;letter-spacing:-.04em}
+.weather-detail-close{width:43px;height:43px;flex:0 0 auto;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--ink);font-size:29px;line-height:1;cursor:pointer}
+.weather-detail-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.weather-detail-summary span{padding:14px;border-radius:14px;background:#e5eff0;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+.weather-detail-summary strong{display:block;color:var(--ink);font:800 18px Manrope;text-transform:none;letter-spacing:0;margin-bottom:3px}
+.weather-detail-hours{display:grid;gap:7px}
+.weather-detail-hours article{display:grid;grid-template-columns:48px 36px 1.15fr 1.4fr .75fr auto;gap:11px;align-items:center;padding:12px 13px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.weather-detail-hours time{font-weight:800;color:var(--sea)}
+.weather-detail-hours>article>i{font-style:normal;font-size:25px}
+.weather-detail-hours strong,.weather-detail-hours small{display:block}
+.weather-detail-hours strong{font:800 14px Manrope}
+.weather-detail-hours small{color:var(--muted);font-size:10px;line-height:1.35;margin-top:2px}
+.weather-detail-hours .coast-label{margin:0;white-space:normal;text-align:center}
+.weather-detail-water{display:none!important}
+@media(max-width:700px){
+  .weather-detail-backdrop{align-items:end;padding:0}
+  .weather-detail-dialog{max-height:92vh;border-radius:26px 26px 0 0;padding:22px 17px max(22px,env(safe-area-inset-bottom))}
+  .weather-detail-summary{grid-template-columns:1fr 1fr}
+  .weather-detail-summary span{padding:11px}
+  .weather-detail-hours article{grid-template-columns:42px 31px 1fr 1fr;padding:10px 8px;gap:8px}
+  .weather-detail-hours article>div:nth-of-type(3){grid-column:3}
+  .weather-detail-hours .coast-label{grid-column:4;justify-self:start}
+  .weather-detail-water{display:block!important;grid-column:3/-1}
+}
