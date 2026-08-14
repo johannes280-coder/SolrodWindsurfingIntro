@@ -164,3 +164,35 @@
   .weather-detail-hours .coast-label{grid-column:4;justify-self:start}
   .weather-detail-water{display:block!important;grid-column:3/-1}
 }
+
+
+/* Windsurfer 1 mestringstjekliste */
+.mastery-section{padding-top:45px;background:#edf4f2}
+.mastery-heading{display:grid;grid-template-columns:1fr minmax(230px,320px);gap:50px;align-items:end;margin-bottom:34px}
+.mastery-heading h2{margin-bottom:12px}
+.mastery-heading p{max-width:620px;color:var(--muted);line-height:1.6;margin:0}
+.mastery-progress{padding:19px;border-radius:17px;background:var(--navy);color:#fff}
+.mastery-progress strong{display:block;font:800 15px Manrope;margin-bottom:11px}
+.mastery-progress span{display:block;height:9px;border-radius:10px;background:linear-gradient(90deg,var(--yellow) var(--mastery-progress),#ffffff28 var(--mastery-progress));transition:background .25s}
+.mastery-group{display:grid;grid-template-columns:170px 1fr;gap:25px;padding:27px 0;border-top:1px solid #cddbd7}
+.mastery-group-title span,.mastery-group-title small{display:block}
+.mastery-group-title span{font:800 23px Manrope;color:var(--sea)}
+.mastery-group-title small{margin-top:4px;color:var(--muted)}
+.mastery-list{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mastery-item{min-height:70px;display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:15px;background:#fff;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.mastery-item:hover{transform:translateY(-1px);border-color:#9fbdb7}
+.mastery-item input{position:absolute;opacity:0;pointer-events:none}
+.mastery-check{width:28px;height:28px;border:2px solid #9fb0b1;border-radius:9px;display:grid;place-items:center;background:#fff;transition:.18s}
+.mastery-item>span:last-child{font-weight:700;line-height:1.4}
+.mastery-item input:focus-visible+.mastery-check{outline:3px solid #0b70802f;outline-offset:3px}
+.mastery-item.mastered{background:#e6f0cf;border-color:#b5ca72}
+.mastery-item.mastered .mastery-check{background:#789524;border-color:#789524}
+.mastery-item.mastered .mastery-check:after{content:'✓';color:#fff;font-weight:900}
+.mastery-item.mastered>span:last-child{color:#405615}
+@media(max-width:700px){
+  .mastery-section{padding-bottom:110px}
+  .mastery-heading{grid-template-columns:1fr;gap:22px;margin-bottom:25px}
+  .mastery-group{grid-template-columns:1fr;gap:14px;padding:24px 0}
+  .mastery-list{grid-template-columns:1fr}
+  .mastery-item{min-height:64px;padding:12px 14px}
+}

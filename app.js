@@ -72,6 +72,48 @@ const lessons = [
   }
 ];
 
+
+const windsurferChecklist = [
+  { id: 'samle-rig', group: 'kan', text: 'Samle mast, bom, sejl, mastfod og ophalerline' },
+  { id: 'montere-board', group: 'kan', text: 'Montere finne, sværd og mastfod' },
+  { id: 'klargoere-vand', group: 'kan', text: 'Løfte board og sejl i vandet og gøre klar til at sejle' },
+  { id: 'snorestart', group: 'kan', text: 'Snorestarte og komme i den sikre position' },
+  { id: 'statisk-vending', group: 'kan', text: 'Lave en statisk vending af boardet (feje boardet rundt)' },
+  { id: 'kropsposition', group: 'kan', text: 'Windsurfe med en god kropsposition' },
+  { id: 'sejladskurser', group: 'kan', text: 'Styre boardet på forskellige kurser: bidevind, halvvind og læns' },
+  { id: 'vindretning', group: 'kan', text: 'Udpege vindens retning' },
+  { id: 'navne', group: 'kan', text: 'Navnene på de andre sejlere og instruktører' },
+  { id: 'undgaa-ulykker', group: 'ved', text: 'Hvordan man undgår ulykker' },
+  { id: 'noedsignal', group: 'ved', text: 'Hvordan man tiltrækker sig opmærksomhed i en nødsituation' },
+  { id: 'mulige-kurser', group: 'ved', text: 'Hvilke kurser man kan windsurfe' },
+  { id: 'krydse', group: 'ved', text: 'Hvordan man krydser op mod vinden' },
+  { id: 'ikke-planende', group: 'ved', text: 'Hvordan en windsurfer fungerer i ikke-planende forhold' },
+  { id: 'soevejsregler', group: 'ved', text: 'Hvordan de grundlæggende søvejsregler er' },
+  { id: 'komme-videre', group: 'ved', text: 'Hvordan man kommer videre med windsurfing efter begynderniveauet' },
+  { id: 'vindstyrker', group: 'ved', text: 'Hvilke vindstyrker der egner sig godt til windsurfing på begynderniveau' },
+  { id: 'klubregler', group: 'ved', text: 'Hvordan klubbens sikkerhedsregler er for begyndere' },
+  { id: 'rigstyring', group: 'ved', text: 'Hvordan man forskyder riggen for at dreje i ikke-planende forhold' },
+  { id: 'stagvending', group: 'proevet', text: 'Lave en stagvending' },
+  { id: 'bomning', group: 'proevet', text: 'Lave en bomning' }
+];
+
+const masteryStorageKey = 'windsurfer-1-mestring';
+function getMasteredSkills() {
+  try { return new Set(JSON.parse(localStorage.getItem(masteryStorageKey) || '[]')); }
+  catch (_error) { return new Set(); }
+}
+function saveMasteredSkills(skills) {
+  try { localStorage.setItem(masteryStorageKey, JSON.stringify([...skills])); }
+  catch (_error) {}
+}
+function updateMasteryProgress() {
+  const checked = document.querySelectorAll('[data-mastery-skill]:checked').length;
+  const count = document.querySelector('#masteryCount');
+  const bar = document.querySelector('#masteryProgressBar');
+  if (count) count.textContent = `${checked} af ${windsurferChecklist.length} mestret`;
+  if (bar) bar.style.setProperty('--mastery-progress', `${checked / windsurferChecklist.length * 100}%`);
+}
+
 const windsurfVideos = [
   ['75Fhnr1Pgv8', 'Vælg det rigtige board'],
   ['bS3VtjB9MLo', 'Beachstart og vandstart'],
@@ -275,7 +317,15 @@ async function loadCurrentWeather() {
 function courseView() {
   return `<section class="page-hero course-hero"><span class="kicker light">Fra landkrabbe til windsurfer</span><h1>Begynder&shy;guiden</h1><p>Følg lektionerne i rækkefølge. Tag telefonen med på stranden og brug hvert trin som støtte.</p></section>
   <section class="section video-section"><div class="video-heading"><div><span class="kicker">Se og lær</span><h2>Windsurfing på video</h2></div><p>Vælg en video nedenfor. Den åbner direkte i afspilleren, så du nemt kan finde den teknik, du vil øve.</p></div><div class="video-frame"><iframe id="windsurfVideoPlayer" src="https://www.youtube-nocookie.com/embed/${windsurfVideos[0][0]}?rel=0" title="${windsurfVideos[0][1]}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><div class="video-picker" aria-label="Vælg undervisningsvideo">${windsurfVideos.map((video, index) => `<button class="video-card ${index === 0 ? 'active' : ''}" data-video="${video[0]}" data-video-title="${video[1]}"><span class="video-thumb"><img src="https://i.ytimg.com/vi/${video[0]}/mqdefault.jpg" alt="" loading="lazy"><span class="video-play" aria-hidden="true">▶</span></span><span class="video-card-copy"><small>Video ${index + 1}</small><strong>${video[1]}</strong></span></button>`).join('')}</div><a class="youtube-link" href="https://youtube.com/playlist?list=PLKPL5ocqBu1gVXunqPIYDhJcoKp4cy5kV" target="_blank" rel="noreferrer">Åbn playlisten på YouTube →</a></section>
-  <section class="section lesson-list"><div class="lesson-section-head"><span class="kicker">Trin for trin</span><h2>De seks lektioner</h2></div>${lessons.map(l => `<button class="lesson-card" data-lesson="${l.id}"><span class="lesson-number">${l.number}</span><span class="lesson-copy"><small>${l.level} · ${l.time}</small><strong>${l.title}</strong><em>${l.intro}</em></span><span class="lesson-arrow">→</span></button>`).join('')}</section>`;
+  <section class="section lesson-list"><div class="lesson-section-head"><span class="kicker">Trin for trin</span><h2>De seks lektioner</h2></div>${lessons.map(l => `<button class="lesson-card" data-lesson="${l.id}"><span class="lesson-number">${l.number}</span><span class="lesson-copy"><small>${l.level} · ${l.time}</small><strong>${l.title}</strong><em>${l.intro}</em></span><span class="lesson-arrow">→</span></button>`).join('')}</section>
+  <section class="section mastery-section">
+    <div class="mastery-heading"><div><span class="kicker">Windsurfer 1</span><h2>Det skal du mestre</h2><p>Markér punkterne, efterhånden som du mestrer dem. Din fremgang gemmes på denne enhed.</p></div><div class="mastery-progress"><strong id="masteryCount">${getMasteredSkills().size} af ${windsurferChecklist.length} mestret</strong><span id="masteryProgressBar" style="--mastery-progress:${getMasteredSkills().size / windsurferChecklist.length * 100}%"></span></div></div>
+    ${[
+      ['kan', 'Jeg kan', 'Praktiske færdigheder'],
+      ['ved', 'Jeg ved', 'Viden og sikkerhed'],
+      ['proevet', 'Jeg har prøvet', 'De første vendinger']
+    ].map(([group, title, subtitle]) => `<div class="mastery-group"><div class="mastery-group-title"><span>${title}</span><small>${subtitle}</small></div><div class="mastery-list">${windsurferChecklist.filter(item => item.group === group).map(item => `<label class="mastery-item"><input type="checkbox" data-mastery-skill="${item.id}" ${getMasteredSkills().has(item.id) ? 'checked' : ''}><span class="mastery-check" aria-hidden="true"></span><span>${item.text}</span></label>`).join('')}</div></div>`).join('')}
+  </section>`;
 }
 
 function lessonView(id) {
@@ -320,9 +370,24 @@ function render(view = currentView) {
   document.body.classList.toggle('home-view', view === 'home');
   app.innerHTML = view === 'home' ? homeView() : view === 'course' ? courseView() : view === 'safety' ? safetyView() : clubView();
   if (view === 'home') loadCurrentWeather();
+  if (view === 'course') {
+    document.querySelectorAll('[data-mastery-skill]').forEach(item => item.closest('.mastery-item')?.classList.toggle('mastered', item.checked));
+    updateMasteryProgress();
+  }
   document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.toggle('active', btn.dataset.view === (view.startsWith('lesson') ? 'course' : view)));
   window.scrollTo({top:0, behavior:'smooth'});
 }
+
+document.addEventListener('change', event => {
+  const checkbox = event.target.closest('[data-mastery-skill]');
+  if (!checkbox) return;
+  const mastered = getMasteredSkills();
+  if (checkbox.checked) mastered.add(checkbox.dataset.masterySkill);
+  else mastered.delete(checkbox.dataset.masterySkill);
+  saveMasteredSkills(mastered);
+  checkbox.closest('.mastery-item')?.classList.toggle('mastered', checkbox.checked);
+  updateMasteryProgress();
+});
 
 document.addEventListener('click', event => {
   const viewTarget = event.target.closest('[data-view]');
