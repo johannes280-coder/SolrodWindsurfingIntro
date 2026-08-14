@@ -149,7 +149,6 @@ async function loadMasteryFromCloud() {
       item.closest('.mastery-item')?.classList.toggle('mastered', item.checked);
     });
     updateMasteryProgress();
-    loadMasteryFromCloud();
   }
   setMasterySyncStatus('Fremgangen er synkroniseret med din konto.', 'success');
 }
@@ -424,6 +423,7 @@ function render(view = currentView) {
   if (view === 'course') {
     document.querySelectorAll('[data-mastery-skill]').forEach(item => item.closest('.mastery-item')?.classList.toggle('mastered', item.checked));
     updateMasteryProgress();
+    loadMasteryFromCloud();
   }
   document.querySelectorAll('.bottom-nav button').forEach(btn => btn.classList.toggle('active', btn.dataset.view === (view.startsWith('lesson') ? 'course' : view)));
   window.scrollTo({top:0, behavior:'smooth'});
