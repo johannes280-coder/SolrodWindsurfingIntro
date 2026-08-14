@@ -196,3 +196,8 @@
   .mastery-list{grid-template-columns:1fr}
   .mastery-item{min-height:64px;padding:12px 14px}
 }
+
+.mastery-sync-status{display:block;margin-top:10px;color:#c9e2e6;font-size:10px;line-height:1.35}
+.mastery-sync-status.success{color:#dff0a9}
+.mastery-sync-status.error{color:#ffd0c5}
+.mastery-sync-status.local{color:#c9e2e6}
