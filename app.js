@@ -106,12 +106,63 @@ function saveMasteredSkills(skills) {
   try { localStorage.setItem(masteryStorageKey, JSON.stringify([...skills])); }
   catch (_error) {}
 }
+function setMasterySyncStatus(message, state = '') {
+  const status = document.querySelector('#masterySyncStatus');
+  if (!status) return;
+  status.textContent = message;
+  status.className = `mastery-sync-status ${state}`;
+}
 function updateMasteryProgress() {
   const checked = document.querySelectorAll('[data-mastery-skill]:checked').length;
   const count = document.querySelector('#masteryCount');
   const bar = document.querySelector('#masteryProgressBar');
   if (count) count.textContent = `${checked} af ${windsurferChecklist.length} mestret`;
   if (bar) bar.style.setProperty('--mastery-progress', `${checked / windsurferChecklist.length * 100}%`);
+}
+async function loadMasteryFromCloud() {
+  if (!window.authClient || !window.currentAccessProfile) {
+    setMasterySyncStatus('Fremgangen gemmes på denne enhed.', 'local');
+    return;
+  }
+  setMasterySyncStatus('Synkroniserer fremgang…');
+  const localSkills = getMasteredSkills();
+  const { data, error } = await window.authClient
+    .from('user_skill_progress')
+    .select('skill_id, mastered')
+    .eq('user_id', window.currentAccessProfile.id);
+  if (error) {
+    setMasterySyncStatus('Cloud-synkronisering er midlertidigt utilgængelig. Ændringer gemmes på denne enhed.', 'error');
+    return;
+  }
+  if (!data.length && localSkills.size) {
+    const rows = [...localSkills].map(skillId => ({ user_id: window.currentAccessProfile.id, skill_id: skillId, mastered: true, updated_at: new Date().toISOString() }));
+    const { error: migrationError } = await window.authClient.from('user_skill_progress').upsert(rows, { onConflict: 'user_id,skill_id' });
+    if (migrationError) {
+      setMasterySyncStatus('Den lokale fremgang kunne ikke overføres endnu.', 'error');
+      return;
+    }
+  } else {
+    const cloudSkills = new Set(data.filter(item => item.mastered).map(item => item.skill_id));
+    saveMasteredSkills(cloudSkills);
+    document.querySelectorAll('[data-mastery-skill]').forEach(item => {
+      item.checked = cloudSkills.has(item.dataset.masterySkill);
+      item.closest('.mastery-item')?.classList.toggle('mastered', item.checked);
+    });
+    updateMasteryProgress();
+    loadMasteryFromCloud();
+  }
+  setMasterySyncStatus('Fremgangen er synkroniseret med din konto.', 'success');
+}
+async function saveMasteryToCloud(skillId, mastered) {
+  if (!window.authClient || !window.currentAccessProfile) return;
+  setMasterySyncStatus('Gemmer…');
+  const { error } = await window.authClient.from('user_skill_progress').upsert({
+    user_id: window.currentAccessProfile.id,
+    skill_id: skillId,
+    mastered,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id,skill_id' });
+  setMasterySyncStatus(error ? 'Kunne ikke synkronisere. Ændringen er gemt på denne enhed.' : 'Fremgangen er synkroniseret med din konto.', error ? 'error' : 'success');
 }
 
 const windsurfVideos = [
@@ -319,7 +370,7 @@ function courseView() {
   <section class="section video-section"><div class="video-heading"><div><span class="kicker">Se og lær</span><h2>Windsurfing på video</h2></div><p>Vælg en video nedenfor. Den åbner direkte i afspilleren, så du nemt kan finde den teknik, du vil øve.</p></div><div class="video-frame"><iframe id="windsurfVideoPlayer" src="https://www.youtube-nocookie.com/embed/${windsurfVideos[0][0]}?rel=0" title="${windsurfVideos[0][1]}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><div class="video-picker" aria-label="Vælg undervisningsvideo">${windsurfVideos.map((video, index) => `<button class="video-card ${index === 0 ? 'active' : ''}" data-video="${video[0]}" data-video-title="${video[1]}"><span class="video-thumb"><img src="https://i.ytimg.com/vi/${video[0]}/mqdefault.jpg" alt="" loading="lazy"><span class="video-play" aria-hidden="true">▶</span></span><span class="video-card-copy"><small>Video ${index + 1}</small><strong>${video[1]}</strong></span></button>`).join('')}</div><a class="youtube-link" href="https://youtube.com/playlist?list=PLKPL5ocqBu1gVXunqPIYDhJcoKp4cy5kV" target="_blank" rel="noreferrer">Åbn playlisten på YouTube →</a></section>
   <section class="section lesson-list"><div class="lesson-section-head"><span class="kicker">Trin for trin</span><h2>De seks lektioner</h2></div>${lessons.map(l => `<button class="lesson-card" data-lesson="${l.id}"><span class="lesson-number">${l.number}</span><span class="lesson-copy"><small>${l.level} · ${l.time}</small><strong>${l.title}</strong><em>${l.intro}</em></span><span class="lesson-arrow">→</span></button>`).join('')}</section>
   <section class="section mastery-section">
-    <div class="mastery-heading"><div><span class="kicker">Windsurfer 1</span><h2>Det skal du mestre</h2><p>Markér punkterne, efterhånden som du mestrer dem. Din fremgang gemmes på denne enhed.</p></div><div class="mastery-progress"><strong id="masteryCount">${getMasteredSkills().size} af ${windsurferChecklist.length} mestret</strong><span id="masteryProgressBar" style="--mastery-progress:${getMasteredSkills().size / windsurferChecklist.length * 100}%"></span></div></div>
+    <div class="mastery-heading"><div><span class="kicker">Windsurfer 1</span><h2>Det skal du mestre</h2><p>Markér punkterne, efterhånden som du mestrer dem. Din fremgang gemmes på denne enhed.</p></div><div class="mastery-progress"><strong id="masteryCount">${getMasteredSkills().size} af ${windsurferChecklist.length} mestret</strong><span id="masteryProgressBar" style="--mastery-progress:${getMasteredSkills().size / windsurferChecklist.length * 100}%"></span><small id="masterySyncStatus" class="mastery-sync-status">Synkroniserer fremgang…</small></div></div>
     ${[
       ['kan', 'Jeg kan', 'Praktiske færdigheder'],
       ['ved', 'Jeg ved', 'Viden og sikkerhed'],
@@ -387,6 +438,7 @@ document.addEventListener('change', event => {
   saveMasteredSkills(mastered);
   checkbox.closest('.mastery-item')?.classList.toggle('mastered', checkbox.checked);
   updateMasteryProgress();
+  saveMasteryToCloud(checkbox.dataset.masterySkill, checkbox.checked);
 });
 
 document.addEventListener('click', event => {
