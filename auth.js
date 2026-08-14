@@ -24,6 +24,7 @@ const sessionStorageAdapter = {
   }
 };
 const authClient = authConfigured ? window.supabase.createClient(authConfig.supabaseUrl, authConfig.supabaseAnonKey, { auth: { storage: sessionStorageAdapter, persistSession: true } }) : null;
+window.authClient = authClient;
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
