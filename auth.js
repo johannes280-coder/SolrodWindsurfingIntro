@@ -46,12 +46,34 @@ function showLogin(mode = 'login') {
   appShell.hidden = true;
   authRoot.hidden = false;
   const registering = mode === 'register';
-  authRoot.innerHTML = `<section class="auth-card"><img class="auth-logo" src="assets/club-logo.png" alt="Solrød Strand Windsurfing logo"><span class="kicker">Medlemsadgang</span><h1>${registering ? 'Opret bruger' : 'Velkommen tilbage'}</h1><p>${registering ? 'Opret din konto. En administrator skal godkende den, før du får adgang.' : 'Log ind for at åbne klubguiden.'}</p><form id="authForm">${registering ? '<label>Navn<input name="name" autocomplete="name" required></label>' : ''}<label>E-mail<input name="email" type="email" autocomplete="email" required></label><label>Adgangskode<input name="password" type="password" autocomplete="current-password" minlength="8" required></label>${registering ? '' : `<label class="remember-login"><input name="remember" type="checkbox" ${localStorage.getItem(rememberPreferenceKey) === 'true' ? 'checked' : ''}><span class="remember-check" aria-hidden="true"></span><span>Husk mig på denne enhed</span></label>`}<div id="authMessage" class="auth-message"></div><button class="auth-submit" type="submit">${registering ? 'Opret bruger' : 'Log ind'}</button></form><button class="auth-switch" id="authSwitch">${registering ? 'Har du allerede en bruger? Log ind' : 'Ny i klubben? Opret bruger'}</button></section>`;
+  const passwordAutocomplete = registering ? 'new-password' : 'current-password';
+  const passwordField = (name, label) => `<label>${label}<span class="password-field"><input id="${name}" name="${name}" type="password" autocomplete="${passwordAutocomplete}" minlength="8" required><button type="button" class="password-toggle" data-password-toggle="${name}" aria-label="Vis ${label.toLowerCase()}" aria-pressed="false">Vis</button></span></label>`;
+  authRoot.innerHTML = `<section class="auth-card"><img class="auth-logo" src="assets/club-logo.png" alt="Solrød Strand Windsurfing logo"><span class="kicker">Medlemsadgang</span><h1>${registering ? 'Opret bruger' : 'Velkommen tilbage'}</h1><p>${registering ? 'Opret din konto. En administrator skal godkende den, før du får adgang.' : 'Log ind for at åbne klubguiden.'}</p><form id="authForm">${registering ? '<label>Navn<input name="name" autocomplete="name" required></label>' : ''}<label>E-mail<input name="email" type="email" autocomplete="email" required></label>${passwordField('password', 'Adgangskode')}${registering ? passwordField('passwordConfirm', 'Gentag adgangskode') : ''}${registering ? '<small class="password-hint">Mindst 8 tegn. Begge adgangskoder skal være ens.</small>' : ''}${registering ? '' : `<label class="remember-login"><input name="remember" type="checkbox" ${localStorage.getItem(rememberPreferenceKey) === 'true' ? 'checked' : ''}><span class="remember-check" aria-hidden="true"></span><span>Husk mig på denne enhed</span></label>`}<div id="authMessage" class="auth-message" aria-live="polite"></div><button class="auth-submit" type="submit">${registering ? 'Opret bruger' : 'Log ind'}</button></form><button class="auth-switch" id="authSwitch">${registering ? 'Har du allerede en bruger? Log ind' : 'Ny i klubben? Opret bruger'}</button></section>`;
+  document.querySelectorAll('[data-password-toggle]').forEach(toggle => toggle.addEventListener('click', () => {
+    const input = document.querySelector(`#${toggle.dataset.passwordToggle}`);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    toggle.textContent = showing ? 'Vis' : 'Skjul';
+    toggle.setAttribute('aria-pressed', String(!showing));
+    toggle.setAttribute('aria-label', `${showing ? 'Vis' : 'Skjul'} ${input.closest('label').firstChild.textContent.trim().toLowerCase()}`);
+  }));
+  if (registering) {
+    const password = document.querySelector('#password');
+    const passwordConfirm = document.querySelector('#passwordConfirm');
+    const validatePasswordMatch = () => passwordConfirm.setCustomValidity(passwordConfirm.value && passwordConfirm.value !== password.value ? 'Adgangskoderne er ikke ens.' : '');
+    password.addEventListener('input', validatePasswordMatch);
+    passwordConfirm.addEventListener('input', validatePasswordMatch);
+  }
   document.querySelector('#authSwitch').addEventListener('click', () => showLogin(registering ? 'login' : 'register'));
   document.querySelector('#authForm').addEventListener('submit', async event => {
     event.preventDefault();
-    const button = event.currentTarget.querySelector('button');
+    const button = event.currentTarget.querySelector('.auth-submit');
     const data = new FormData(event.currentTarget);
+    if (registering && data.get('password') !== data.get('passwordConfirm')) {
+      showAuthMessage('Adgangskoderne er ikke ens. Prøv igen.');
+      document.querySelector('#passwordConfirm').focus();
+      return;
+    }
     button.disabled = true;
     button.textContent = 'Et øjeblik…';
     if (registering) {
@@ -228,3 +250,4 @@ if (!authConfigured) {
   authClient.auth.getSession().then(({ data }) => applySession(data.session));
   authClient.auth.onAuthStateChange((_event, session) => setTimeout(() => applySession(session), 0));
 }
+
